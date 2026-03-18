@@ -38,8 +38,8 @@ imp.reload(RigOperators)
 bl_info = {
 	"name": "Starfield Animation",
 	"author": "Deveris, Calaverah & Jojo",
-	"version": (1, 5, 0),
-	"blender": (3, 5, 0),
+	"version": (1, 0, 0),
+	"blender": (4, 3, 0),
 	"location": "File > Import-Export",
 	"description": "Export & Import Starfield .af, and other animation-related files",
 	"warning": "",
