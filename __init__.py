@@ -41,7 +41,7 @@ bl_info = {
 	"version": (1, 0, 0),
 	"blender": (4, 3, 0),
 	"location": "File > Import-Export",
-	"description": "Export & Import Starfield .af, and other animation-related files",
+	"description": "Export & Import Starfield .af & .rig",
 	"warning": "",
 	"category": "Import-Export",
 }
