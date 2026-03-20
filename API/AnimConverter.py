@@ -42,6 +42,8 @@ def GetAllBoneKeyframes(armature_obj, bone_name):
 
     armature_obj.pose.bones.get(bone_name).rotation_mode = 'QUATERNION'
 
+    # The function is unused for now, but for the future -
+    # should be made compatible with 5.0
     for fcurve in action.fcurves:
         data_path = fcurve.data_path
 

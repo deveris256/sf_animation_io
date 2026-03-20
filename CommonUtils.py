@@ -75,3 +75,7 @@ def GenPrettyPropTableWithLabel(layout, obj, props_dict, space_for_icons=True):
             row.label(text=text)
         else:
             row.label(text="")
+
+def GetBlenderVersion():
+    import bpy
+    return bpy.app.version

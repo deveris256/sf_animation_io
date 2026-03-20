@@ -1,5 +1,6 @@
 from API.AnimationIOWrappers import AnimFrameData
 import bpy
+import CommonUtils
 
 class AnimData():
     def __init__(self):
@@ -40,16 +41,28 @@ class AnimData():
         return bones
 
     def LoadFromBlender(self, armature, rig_name_id_mapping):
+        if CommonUtils.GetBlenderVersion()[0] == 5:
+            from bpy_extras import anim_utils
+
         self.LoadAnimationAttributes(armature)
         self.frames.clear()
         num_anim_frames = 0
 
         action = armature.animation_data.action
 
-        for fcurve in action.fcurves:
-            for kp in fcurve.keyframe_points:
-                frame_num = int(kp.co[0])
-                num_anim_frames = max(frame_num, num_anim_frames)
+        if CommonUtils.GetBlenderVersion()[0] == 5:
+            slot = action.slots[0] # for now
+            channelbag = anim_utils.action_get_channelbag_for_slot(action, slot)
+
+            for fcurve in channelbag.fcurves:
+                for kp in fcurve.keyframe_points:
+                    frame_num = int(kp.co[0])
+                    num_anim_frames = max(frame_num, num_anim_frames)
+        else:
+            for fcurve in action.fcurves:
+                for kp in fcurve.keyframe_points:
+                    frame_num = int(kp.co[0])
+                    num_anim_frames = max(frame_num, num_anim_frames)
 
         num_anim_frames += 1
 
