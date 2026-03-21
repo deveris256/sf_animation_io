@@ -7,11 +7,11 @@ if dir not in sys.path:
     sys.path.append(dir)
 
 import CommonUtils
+import AnimationOperators
+import RigOperators
+
 if CommonUtils.GetBlenderVersion()[0] != 5:
     # Modules
-    import AnimationOperators
-    import RigOperators
-
     import imp
     from API import (
         AnimConverterFunc,
