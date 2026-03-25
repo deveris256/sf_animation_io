@@ -1,6 +1,6 @@
 This part of the tutorial has general animation info. If you already know the Blender-specific animation details, you may skip the section.
 
-[Back to Main Tutorial](docs_main.md)
+[Back to Main Tutorial](sf_animation_io_docs.md)
 
 [AnimationIO-specific Animation Docs](docs_animation.md)
 ___

@@ -1,6 +1,6 @@
 This part of the tutorial will cover everything about Armatures/Rigs in Blender-specific context.
 
-[Back to Main Tutorial](docs_main.md)
+[Back to Main Tutorial](sf_animation_io_docs.md)
 
 [AnimationIO-specific Rig Docs](docs_rig.md)
 

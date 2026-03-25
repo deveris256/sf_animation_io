@@ -1,6 +1,6 @@
 This part of the tutorial has general animation info.
 
-[Back to Main Tutorial](docs_main.md)
+[Back to Main Tutorial](sf_animation_io_docs.md)
 
 [Blender-specific Animation Docs](docs_blender_animation.md)
 

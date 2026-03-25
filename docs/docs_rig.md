@@ -1,6 +1,6 @@
 This part of the tutorial will cover everything about Rigs.
 
-[Back to Main Tutorial](docs_main.md)
+[Back to Main Tutorial](sf_animation_io_docs.md)
 
 [Blender-specific Rig Docs](docs_blender_rig.md)
 
