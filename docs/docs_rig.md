@@ -28,13 +28,17 @@ To set up Starfield rig specific settings for your rig, go to the side (N hotkey
 ![](img/af924f4d3e58483297c3230642678e03.png)
 
 **Name**: Set the name of the rig. Currently, unused.
+
 **Precision**: A value found to differ on various rigs; select which seems to be appropriate for your rig from the drop down.
 
 ### Bone Editor
 
 Bone Editor is a section for managing Starfield-rig-specific bone settings.
+
 **Index**: Matters a lot, should start from 0 (root bone should be zero) and increment (Root = 0, next bone = 1, etc.) - it should stay unique per-bone.
+
 **Mirror**: Index of the bone's symmetrical equivalent (such as, L_Arm may reference R_Arm). Can stay -1 without problems.
+
 **Type**: Default or Twist. Twist bones cannot be animated, and all keyframes of twist bones will be dropped on export as testing has shown keyframes of the bones marked as Twist won't play in-game.
 
 ### Bone Mapping
