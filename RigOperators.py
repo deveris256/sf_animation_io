@@ -51,6 +51,19 @@ class ExportCustomRig(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+class OpenRegisteredRigsFolder(bpy.types.Operator):
+    bl_idname = "scene.sf_open_registered_rigs_folder"
+    bl_label = "Open registered rigs folder"
+
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        import os
+        folder = RigUtils.GetRigFolder()
+        os.startfile(folder)
+        return {'FINISHED'}
+
+
 class ImportCustomRig(bpy.types.Operator):
     bl_idname = "import_scene.import_custom_starfield_rig"
     bl_label = "Starfield Rig (.rig)"
@@ -82,6 +95,9 @@ class ImportCustomRig(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+def UpdateRigName(self, context):
+    self["rig_name"] = PrepareFileName(self.rig_name.lower().removesuffix(".rig"))
+
 class RegisterCustomRig(bpy.types.Operator):
     bl_idname = "scene.register_custom_rig"
     bl_label = "Register Starfield Rig From File"
@@ -94,7 +110,8 @@ class RegisterCustomRig(bpy.types.Operator):
 
     rig_name: bpy.props.StringProperty(
         name="Name",
-        description="Name the Rig should be registered as"
+        description="Name the Rig should be registered as",
+        update=UpdateRigName
     )
 
     @classmethod
@@ -113,6 +130,11 @@ class RegisterCustomRig(bpy.types.Operator):
         if rig_name in self.existing_rigs:
             alert_box = box.box()
 
+        if not rig_name:
+            no_name_alert = box.box()
+            no_name_alert.alert = True
+            no_name_alert.label(text="Rig must have a name", icon='WARNING_LARGE')
+
         box.prop(self, "rig_name")
 
         # Alert on overwrite checks
@@ -127,6 +149,7 @@ class RegisterCustomRig(bpy.types.Operator):
         row.label(text="")
         row.scale_y = 0.5
         layout.label(text=f"Existing Rigs ({self.rig_amount}):")
+        layout.operator('scene.sf_open_registered_rigs_folder')
 
         for name in self.existing_rigs:
             box = layout.box()
@@ -136,6 +159,10 @@ class RegisterCustomRig(bpy.types.Operator):
 
     def execute(self, context):
         self.rig_name = PrepareFileName(self.rig_name.lower().removesuffix(".rig"))
+        if not self.rig_name:
+            self.report({'ERROR'}, f"Rig name cannot be empty")
+            return {'CANCELLED'}
+
         if not os.path.isfile(self.filepath):
             self.report({'ERROR'}, f"Unable to register rig: File does not exist: {self.filepath}")
             return {'CANCELLED'}
@@ -296,6 +323,7 @@ __classes__ = [
     RegisterCustomRig,
     ImportCustomRig,
     ExportCustomRig,
+    OpenRegisteredRigsFolder,
 ]
 
 def menu_func_register_rig(self, context):

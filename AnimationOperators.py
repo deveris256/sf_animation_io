@@ -463,6 +463,10 @@ class OBJECT_PT_SF_AnimationManagementPanel(bpy.types.Panel):
         layout = self.layout
         obj = context.object
 
+        box = layout.box()
+        box.label(text="General")
+        box.operator("scene.register_custom_rig")
+
         if not obj or obj.type != "ARMATURE":
             layout.label(text="Select armature object")
             return
