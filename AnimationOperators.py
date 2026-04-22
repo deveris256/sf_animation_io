@@ -34,6 +34,8 @@ class ImportCustomAnimation(bpy.types.Operator):
     bl_idname = "import_scene.custom_af"
     bl_label = "Import Custom Animation"
 
+    bl_options = {'UNDO'}
+
     filepath: bpy.props.StringProperty(options={'HIDDEN'})
     directory: bpy.props.StringProperty(options={'HIDDEN'})
     files: bpy.props.CollectionProperty(type=bpy.types.OperatorFileListElement)
@@ -54,6 +56,13 @@ class ImportCustomAnimation(bpy.types.Operator):
         GenDescriptionBox(self.strings["selected_rig"], box)
 
         box = layout.box()
+
+        if len(self.files) > 1 and self.on_active_object:
+            abox = box.box()
+            abox.alert = True
+            abox.label(text="Multiple files selected", icon='WARNING_LARGE')
+            abox.label(text="Won't import on active object")
+
         box.prop(self, "on_active_object")
         GenDescriptionBox(self.strings["on_active_object"], box)
 
@@ -65,10 +74,11 @@ class ImportCustomAnimation(bpy.types.Operator):
         m = bpy.context.view_layer.objects.active
         mesh_obj_name = None
 
-        if self.on_active_object and m != None and m.type == "MESH" and len(self.files) == 1:
+        if self.on_active_object and m != None and len(self.files) == 1 and m.type in ["MESH", "ARMATURE"]:
             mesh_obj_name = bpy.context.view_layer.objects.active.name
+            import_type = m.type
         else:
-            self.on_active_object = False
+            import_type = None
 
         if self.selected_rig == "NONE":
             self.report({'ERROR'}, f"Please register rig first (F3 -> Register Starfield Rig)")
@@ -89,19 +99,30 @@ class ImportCustomAnimation(bpy.types.Operator):
 
         rig = AnimConverter.ImportRig(rig_path)
 
-        orig_armature_data = bpy.data.armatures.new(name="armature")
-        orig_armature_obj = bpy.data.objects.new(name=rig.name, object_data=orig_armature_data)
-        bpy.context.collection.objects.link(orig_armature_obj)
+        # If armature is active and import is on active object
+        if import_type == "ARMATURE":
+            orig_armature_obj = bpy.context.scene.objects.get(mesh_obj_name)
+            orig_armature_obj.animation_data_clear()
 
-        bpy.context.view_layer.objects.active = orig_armature_obj
-        bpy.ops.object.mode_set(mode='EDIT')
-        RecursiveCreateRig(orig_armature_obj, rig, [b for b in rig.bones if b.parent_name == None])
-        RigPostProcess(orig_armature_obj)
-        RigSetBoneAttr(rig, orig_armature_obj)
-        bpy.ops.object.mode_set(mode='OBJECT')
+            for bone in orig_armature_obj.pose.bones:
+                bone.matrix_basis.identity()
+            RigSetBoneAttr(rig, orig_armature_obj)
+
+        # if not then proceed create armature
+        else:
+            orig_armature_data = bpy.data.armatures.new(name="armature")
+            orig_armature_obj = bpy.data.objects.new(name=rig.name, object_data=orig_armature_data)
+            bpy.context.collection.objects.link(orig_armature_obj)
+            bpy.context.view_layer.objects.active = orig_armature_obj
+            bpy.ops.object.mode_set(mode='EDIT')
+            RecursiveCreateRig(orig_armature_obj, rig, [b for b in rig.bones if b.parent_name == None])
+            RigPostProcess(orig_armature_obj)
+            RigSetBoneAttr(rig, orig_armature_obj)
+            bpy.ops.object.mode_set(mode='OBJECT')
 
         bpy.context.scene.frame_set(0)
 
+        # Import all sel file
         for file in self.files:
             filepath = os.path.join(self.directory, file.name)
             anim_scene = AnimConverter.ImportAnimation(rig_path, filepath)
@@ -141,7 +162,8 @@ class ImportCustomAnimation(bpy.types.Operator):
         if self.set_frames_end:
             bpy.context.scene.frame_end = max_frames
 
-        if mesh_obj_name != None:
+        # If import active on mesh, then set armature modifier
+        if import_type == "MESH":
             mod_name = self.filepath[0][:-3]
             mesh_obj = bpy.context.scene.objects.get(mesh_obj_name)
             mods = [m for m in mesh_obj.modifiers if m.type == 'ARMATURE']
@@ -149,14 +171,12 @@ class ImportCustomAnimation(bpy.types.Operator):
                 modifier = mesh_obj.modifiers.new(name=mod_name, type='ARMATURE')
             else:
                 modifier = mods[0]
-
             modifier.name = mod_name
             modifier.use_deform_preserve_volume = False
             modifier.use_multi_modifier = False
             modifier.object = armature_obj
             modifier.use_vertex_groups = True
             modifier.use_bone_envelopes = False
-
             mesh_obj.parent = armature_obj
 
         return {'FINISHED'}
