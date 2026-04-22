@@ -382,3 +382,4 @@ scripts/tool_export_mesh/Assets/Rigs/*.*
 /.idea
 /scripts/tool_animation_io/.idea
 *.rig
+/docs/.obsidian
