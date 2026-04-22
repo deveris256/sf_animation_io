@@ -75,6 +75,10 @@ class ImportCustomRig(bpy.types.Operator):
     filter_glob: bpy.props.StringProperty(default="*.rig", options={'HIDDEN'})
 
     def execute(self, context):
+        if not os.path.isfile(self.filepath) or not self.filepath.lower().endswith(".rig"):
+            self.report({'ERROR'}, f"Not a rig file: {self.filepath}")
+            return {'CANCELLED'}
+
         rig = AnimConverter.ImportRig(self.filepath)
 
         armature_data = bpy.data.armatures.new(name="armature")

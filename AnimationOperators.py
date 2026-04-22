@@ -71,10 +71,18 @@ class ImportCustomAnimation(bpy.types.Operator):
         GenDescriptionBox(self.strings["set_frames_end"], box)
 
     def execute(self, context):
+        files = [f for f in self.files
+                 if os.path.isfile(os.path.join(self.directory, f.name))
+                 and f.name.lower().endswith(".af")]
+
+        if len(files) == 0:
+            self.report({'ERROR'}, "No files to import")
+            return {'CANCELLED'}
+
         m = bpy.context.view_layer.objects.active
         mesh_obj_name = None
 
-        if self.on_active_object and m != None and len(self.files) == 1 and m.type in ["MESH", "ARMATURE"]:
+        if self.on_active_object and m != None and len(files) == 1 and m.type in ["MESH", "ARMATURE"]:
             mesh_obj_name = bpy.context.view_layer.objects.active.name
             import_type = m.type
         else:
@@ -123,12 +131,13 @@ class ImportCustomAnimation(bpy.types.Operator):
         bpy.context.scene.frame_set(0)
 
         # Import all sel file
-        for file in self.files:
+        for file in files:
             filepath = os.path.join(self.directory, file.name)
+
             anim_scene = AnimConverter.ImportAnimation(rig_path, filepath)
             anim_data = anim_scene.animations[0]
 
-            if file != self.files[-1]:
+            if file != files[-1]:
                 armature_obj = orig_armature_obj.copy()
                 armature_obj.data = orig_armature_obj.data.copy()
                 bpy.context.collection.objects.link(armature_obj)
