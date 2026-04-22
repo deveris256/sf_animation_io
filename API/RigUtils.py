@@ -11,6 +11,12 @@ def GetRigByName(name):
         return None
     return path
 
+def GetRigReferenceObject(name):
+    path = os.path.join(GetRigFolder(), f"{name}.fbx")
+    if not os.path.isfile(path):
+        return None
+    return path
+
 def GetRigFolder():
     rig_folder = os.path.join(os.path.dirname(__file__), "Assets", "Rigs")
     if not os.path.isdir(rig_folder):

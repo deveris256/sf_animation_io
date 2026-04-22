@@ -2,6 +2,7 @@ import bpy
 import os
 import textwrap
 from API import AnimConverter, RigUtils
+from API.RigUtils import rig_list_enum_items, GetRigFolder
 from CommonUtils import PrepareFileName, GenDescriptionBox
 
 strings = {
@@ -101,6 +102,75 @@ class ImportCustomRig(bpy.types.Operator):
 
 def UpdateRigName(self, context):
     self["rig_name"] = PrepareFileName(self.rig_name.lower().removesuffix(".rig"))
+
+class RegisterCustomReferenceObject(bpy.types.Operator):
+    bl_idname = "scene.register_custom_reference_object"
+    bl_label = "Register Starfield Reference Object"
+    bl_description = "QoL feature. Registers a reference object that's optionally imported with import animation."
+    bl_options = {'REGISTER'}
+
+    selected_rig: bpy.props.EnumProperty(name="Rig", items=rig_list_enum_items, description="Rig to register the reference object for")
+    ignore_weights: bpy.props.BoolProperty(name="Ignore weights", description="Don't export vertex groups")
+
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.view_layer.objects.active
+
+        if obj.type != "MESH":
+            obj = None
+
+        if not obj:
+            alert_box = layout.box()
+            alert_box.alert = True
+            alert_box.label(text="⚠ No object active")
+            return
+
+        box = layout.box()
+        col = box.column()
+        col.scale_x = 0.5
+        col.label(text=f"Reference object: {obj.name}")
+
+        layout.prop(self, "ignore_weights")
+
+        col.prop(self, "selected_rig", text="For rig")
+
+    def execute(self, context):
+        obj = bpy.context.view_layer.objects.active
+        modifiers = [m for m in obj.modifiers if m.type == 'ARMATURE' and m.object != None]
+        if not self.ignore_weights and len(modifiers) == 0:
+            self.report({"ERROR"}, "Weights enabled: Cannot export reference object that has no armature modifier, due to weights not exporting without the modifier.")
+            return {'CANCELLED'}
+
+        for o in bpy.context.scene.objects:
+            if o != obj and o not in [m.object for m in modifiers]:
+                o.select_set(False)
+                continue
+            o.hide_set(False)
+
+            if not o.visible_get():
+                self.report({'ERROR'}, f"Unhide {o.name} before registering the reference object.")
+                return {'CANCELLED'}
+
+            o.select_set(True)
+
+        export_path = os.path.join(GetRigFolder(), self.selected_rig + ".fbx")
+        bpy.ops.export_scene.fbx(
+            filepath=export_path,
+            check_existing=False,
+            use_selection=True,
+            bake_anim=False,
+            object_types={"MESH", "ARMATURE"}
+        )
+
+        self.report({'INFO'}, "Registered rig reference successfully!")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        obj = bpy.context.view_layer.objects.active
+
+
+        return context.window_manager.invoke_props_dialog(self)
+
 
 class RegisterCustomRig(bpy.types.Operator):
     bl_idname = "scene.register_custom_rig"
@@ -327,6 +397,7 @@ __classes__ = [
     RegisterCustomRig,
     ImportCustomRig,
     ExportCustomRig,
+    RegisterCustomReferenceObject,
     OpenRegisteredRigsFolder,
 ]
 
