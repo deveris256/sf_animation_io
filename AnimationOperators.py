@@ -197,7 +197,7 @@ class ImportCustomAnimation(bpy.types.Operator):
 
 
 
-            if self.imp_mode == "as_armature_with_reference":
+            if self.imp_mode == "as_armature_with_reference" and mesh_obj_name != None:
                 clone = bpy.context.scene.objects.get(mesh_obj_name).copy()
                 bpy.context.collection.objects.link(clone)
                 clone.name = anim_data.name + "_reference"
