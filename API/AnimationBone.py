@@ -123,15 +123,10 @@ class AnimationBoneTranslation:
     raw and Blender-ready values.
     """
 
-    def __init__(self, raw_translation=None):
-        if raw_translation is not None:
-            self.x = raw_translation[0]
-            self.y = raw_translation[1]
-            self.z = raw_translation[2]
-        else:
-            self.x = None
-            self.y = None
-            self.z = None
+    def __init__(self):
+        self.x = None
+        self.y = None
+        self.z = None
 
     @property
     def is_none(self):
@@ -149,23 +144,23 @@ class AnimationBoneTranslation:
 
     @property
     def blender(self):
-        x = -self.z  # -Z to X
-        y = self.x  # X to Y
-        z = self.y  # Y to Z
+        x = -self.y
+        y = self.x
+        z = self.z
         return x, y, z
 
     @blender.setter
     def blender(self, value):
-        if value[1] is not None: self.x = value[1]
-        if value[2] is not None: self.z = value[2]
-        if value[0] is not None: self.y = -value[0]
+        self.x = value[1]
+        self.y = -value[0]
+        self.z = value[2]
 
     def PtrSetTranslation(self, tsq):
         vec = _GetValueFromTranslationEntryC(tsq)
 
         t_x = _GetVector3DX(vec)
-        t_y = _GetVector3DZ(vec)
-        t_z = _GetVector3DY(vec)
+        t_y = _GetVector3DY(vec)
+        t_z = _GetVector3DZ(vec)
 
         self.raw = (t_x, t_y, t_z)
 
