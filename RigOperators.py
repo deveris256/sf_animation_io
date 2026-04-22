@@ -47,6 +47,7 @@ class ExportCustomRig(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        self.filename = "skeleton.rig"
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
