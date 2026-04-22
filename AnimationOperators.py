@@ -13,7 +13,7 @@ from API.RigUtils import (
 strings = {
     "selected_rig": \
         "Corresponding animation's matching rig. "
-        "If the rig doesn't match, the animation won't import!",
+        "If the rig doesn't match, the animation won't export!",
     "on_active_object": \
         "Imports animation and replaces/creates an armature "
         "modifier for an active object (if found)",
@@ -216,14 +216,40 @@ class ExportCustomAnimation(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
+        rigs = [r for r in bpy.context.selected_objects if r.type == "ARMATURE" and r.sf_anim_props.is_anim]
 
         box = layout.box()
         box.prop(self, "selected_rig")
         GenDescriptionBox(self.strings["selected_rig"], box)
 
+        if len(rigs) == 0:
+            box = layout.box()
+            box.alert = True
+            col = box.column()
+            col.scale_y = 0.7
+            col.label(text="⚠ No animation armature selected.")
+            col.label(text="Nothing will be exported.")
+            col.label(text="Mark armature as Animation in")
+            col.label(text="the Animation IO tab")
+        elif len(rigs) == 1:
+            layout.label(text=f"Exporting {rigs[0].name}")
+        else:
+            box = layout.box()
+            box.alert = True
+            box.label(text=f"⚠ Filename box will be ignored")
+            layout.label(text=f"These files will be exported:")
+            col = layout.column()
+            col.scale_y = 0.7
+            [col.label(text=r.sf_anim_props.anim_name + ".af") for r in rigs]
+
+
     def execute(self, context):
 
         rigs = [r for r in bpy.context.selected_objects if r.type == "ARMATURE" and r.sf_anim_props.is_anim]
+
+        if len(rigs) == 0:
+            self.report({'ERROR'}, f"Select armature(s) marked as Animation in Animation IO tab")
+            return {'CANCELLED'}
 
         for rig_obj in rigs:
             bpy.ops.object.select_all(action='DESELECT')
