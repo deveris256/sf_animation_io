@@ -10,21 +10,26 @@ class AnimData():
         self.end = 1
 
     def SetAnimationAttributes(self, armature_obj):
+        """Sets Blender armature attributes"""
         armature_obj.sf_anim_props.anim_name = self.name
 
     def LoadAnimationAttributes(self, armature_obj):
+        """Loads data from Blender armature"""
         self.name = armature_obj.sf_anim_props.anim_name
 
     def GetFrameCount(self):
+        """Gets animation frame count"""
         return len(list(self.frames.keys()))
 
     def GetFrame(self, frame_number):
+        """Gets specific frame"""
         str_frame_number = str(frame_number)
         if str_frame_number not in self.frames:
             return None
         return self.frames[str_frame_number]
 
     def AddGetFrame(self, frame_number):
+        """Gets frame or adds a new one, always returns a frame"""
         frame = self.GetFrame(frame_number)
 
         str_frame_number = str(frame_number)
@@ -33,14 +38,16 @@ class AnimData():
 
         return self.frames[str_frame_number]
 
-    def GetBoneList(self):
-        bones = []
-        for frame in self.frames:
-            for bdata in frame.bone_data:
-                bones.append(bdata.bone_name)
-        return bones
+    # whatever that is
+    #def GetBoneList(self):
+    #    bones = []
+    #    for frame in self.frames:
+    #        for bdata in frame.bone_data:
+    #            bones.append(bdata.bone_name)
+    #    return bones
 
     def LoadFromBlender(self, armature, rig_name_id_mapping):
+        """Loads animation from Blender armature"""
         if CommonUtils.GetBlenderVersion()[0] == 5:
             from bpy_extras import anim_utils
 
