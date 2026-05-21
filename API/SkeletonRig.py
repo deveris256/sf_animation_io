@@ -51,7 +51,7 @@ class SkelRig:
 
         for b_idx in range(bone_count):
             bone = RigBone()
-            bone.LoadBoneFromRig(rig_ptr, b_idx)
+            bone.from_ptr(rig_ptr, b_idx)
 
             self.bones.append(bone)
 
@@ -99,7 +99,7 @@ class SkelRig:
 
         for b in bones:
             bone = RigBone()
-            bone.LoadBoneFromArmature(armature_obj.data.edit_bones.get(b.name))
+            bone.from_blender(armature_obj.data.edit_bones.get(b.name))
             self.bones.append(bone)
 
         # Post-process

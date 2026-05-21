@@ -1,4 +1,5 @@
 import ctypes
+import bpy
 
 from API.AnimConverterFunc import _GetMirrorIndexC, _GetTwistBoneDriverIndexC, _GetTwistBoneDriverWeightC, \
     _GetBoneTypeC, _GetSkeletonBoneParentIndexC, _GetSkeletonBoneC, _GetSkeletonBoneNameC, _GetSkeletonBoneRotationC, \
@@ -8,7 +9,7 @@ from API.AnimConverterFunc import _GetMirrorIndexC, _GetTwistBoneDriverIndexC, _
     _SFBGSRigPackage_AddBoneNameToMapC, _GetStringFromContainerC
 
 
-class RigBone():
+class RigBone:
     """
     RigBone class stores data of a rig bone in an
     easily accessible to Python way.
@@ -24,7 +25,7 @@ class RigBone():
     def __init__(self):
         self.bone_name = None
         self.rotation = RigBoneRotation()
-        self.translation = None
+        self.translation = None #todo translation class
 
         self.parent_name = None
         self.parent_index = None
@@ -74,46 +75,16 @@ class RigBone():
 
         self._bone_type = val
 
-    def SetArmatureBoneAttributes(self, armature_bone):
-        """Sets Armature's bone attributes"""
-        armature_bone.sf_bone_props.index = self.index
-        armature_bone.sf_bone_props.mirror_index = self.mirror_index
-        armature_bone.sf_bone_props.bone_type = str(self.bone_type_blender)
-        armature_bone.sf_bone_props.twist_bone_driver_weight = self.twist_bone_driver_weight
-        armature_bone.sf_bone_props.mapping = str(self.mapping)
-
-        if RigBone.bone_types[self.bone_type] == "Twist":
-            armature_bone.sf_bone_props.twist_bone_driver_index = self.twist_bone_driver_index
-            armature_bone.sf_bone_props.twist_bone_driver_weight = self.twist_bone_driver_weight
-
-    def LoadArmatureBoneAttributes(self, armature_bone):
-        """Loads attributes from Armature's editbone"""
-        self.index = armature_bone.sf_bone_props.index
-        self.mirror_index = armature_bone.sf_bone_props.mirror_index
-        self.bone_type_blender = armature_bone.sf_bone_props.bone_type
-        self.mapping = int(armature_bone.sf_bone_props.mapping)
-
-        if armature_bone.sf_bone_props.bone_type == "Twist":
-            self.twist_bone_driver_index = armature_bone.sf_bone_props.twist_bone_driver_index
-            self.twist_bone_driver_weight = armature_bone.sf_bone_props.twist_bone_driver_weight
-
-
-    def PtrSetBoneAttributes(self, rig_bone):
-        """
-        Sets bone attributes
-        """
+    def set_attributes_from_ptr(self, rig_bone):
+        """Sets bone attributes"""
         self.rig_bone_index = self.index # TODO TODO
         self.mirror_index = _GetMirrorIndexC(rig_bone)
         self.twist_bone_driver_index = _GetTwistBoneDriverIndexC(rig_bone, ctypes.c_bool(False))
         self.twist_bone_driver_weight = _GetTwistBoneDriverWeightC(rig_bone, ctypes.c_bool(False))
         self.bone_type = _GetBoneTypeC(rig_bone)
 
-    def PtrSetBoneParent(self, rig_bone, rig_ptr):
-        """
-        Sets bone parent name and index
-        from SkeletonRig*
-        """
-        err = ctypes.c_char()
+    def set_parent_from_ptr(self, rig_bone, rig_ptr):
+        """Sets bone parent name and index from SkeletonRig*"""
         parent_index = _GetSkeletonBoneParentIndexC(rig_bone)
 
         if parent_index != -1:
@@ -128,10 +99,8 @@ class RigBone():
             self.parent_name = None
             self.parent_index = -1
 
-    def PtrSetBoneRotation(self, rig_bone):
-        """
-        Sets bone rotation from ptr
-        """
+    def set_rotation_from_ptr(self, rig_bone):
+        """Sets bone rotation from ptr"""
         bone_r = _GetSkeletonBoneRotationC(rig_bone, False)
 
         try:
@@ -145,10 +114,8 @@ class RigBone():
             self.rotation.z = 0.0
             self.rotation.w = 0.0
 
-    def PtrSetBoneTranslation(self, rig_bone):
-        """
-        Sets bone translation from ptr
-        """
+    def set_translation_from_ptr(self, rig_bone):
+        """Sets bone translation from ptr"""
         bone_t = _GetSkeletonBonePositionC(rig_bone, False)
 
         try:
@@ -162,14 +129,38 @@ class RigBone():
 
         self.translation = (x, y, z)
 
-    def PtrSetBoneMapping(self, rig_ptr):
-        """
-        Sets bone mapping from ptr
-        """
+    def set_bone_mapping_from_ptr(self, rig_ptr):
+        """Sets bone mapping from ptr"""
         if _SFBGSRigPackage_BoneIsMappedC(rig_ptr, self.bone_name.encode('utf-8')):
             self.mapping = _SFBGSRigPackage_GetBoneKeyC(rig_ptr, self.bone_name.encode('utf-8'))
 
-    def LoadBoneFromRig(self, rig_ptr, b_idx):
+    def set_blender_bone_attr(self, armature_bone : bpy.types.EditBone):
+        """Sets Blender armature bone attributes"""
+        armature_bone.sf_bone_props.index = self.index
+        armature_bone.sf_bone_props.mirror_index = self.mirror_index
+        armature_bone.sf_bone_props.bone_type = str(self.bone_type_blender)
+        armature_bone.sf_bone_props.twist_bone_driver_weight = self.twist_bone_driver_weight
+        armature_bone.sf_bone_props.mapping = str(self.mapping)
+
+        if RigBone.bone_types[self.bone_type] == "Twist":
+            armature_bone.sf_bone_props.twist_bone_driver_index = self.twist_bone_driver_index
+            armature_bone.sf_bone_props.twist_bone_driver_weight = self.twist_bone_driver_weight
+
+    def from_blender(self, edit_bone : bpy.types.EditBone):
+        """Loads bone from Blender armature"""
+        self.bone_name = edit_bone.name
+        self.parent_name = edit_bone.parent.name if edit_bone.parent != None else None
+        self.parent_index = edit_bone.parent.sf_bone_props.index if edit_bone.parent != None else -1
+        self.index = edit_bone.sf_bone_props.index
+        self.mirror_index = edit_bone.sf_bone_props.mirror_index
+        self.bone_type_blender = edit_bone.sf_bone_props.bone_type
+        self.mapping = int(edit_bone.sf_bone_props.mapping)
+
+        if edit_bone.sf_bone_props.bone_type == "Twist":
+            self.twist_bone_driver_index = edit_bone.sf_bone_props.twist_bone_driver_index
+            self.twist_bone_driver_weight = edit_bone.sf_bone_props.twist_bone_driver_weight
+
+    def from_ptr(self, rig_ptr, b_idx : int):
         """Loads bone from rig pointer"""
         rig_bone = _GetSkeletonBoneC(
             rig_ptr,
@@ -178,25 +169,15 @@ class RigBone():
         )
 
         self.bone_name = _GetSkeletonBoneNameC(rig_bone).decode('utf-8').strip()
-        self.PtrSetBoneTranslation(rig_bone)
-        self.PtrSetBoneRotation(rig_bone)
-        self.PtrSetBoneParent(rig_bone, rig_ptr)
-        self.PtrSetBoneMapping(rig_ptr)
+        self.set_translation_from_ptr(rig_bone)
+        self.set_rotation_from_ptr(rig_bone)
+        self.set_parent_from_ptr(rig_bone, rig_ptr)
+        self.set_bone_mapping_from_ptr(rig_ptr)
         self.index = b_idx  # TODO
 
-        self.PtrSetBoneAttributes(rig_bone)
+        self.set_attributes_from_ptr(rig_bone)
 
-    def LoadBoneFromArmature(self, edit_bone, index=-1):
-        """
-        Loads bone from Blender armature
-        """
-        self.bone_name = edit_bone.name
-        self.parent_name = edit_bone.parent.name if edit_bone.parent != None else None
-        self.parent_index = edit_bone.parent.sf_bone_props.index if edit_bone.parent != None else -1
-        self.index = index  # TODO
-        self.LoadArmatureBoneAttributes(edit_bone)
-
-    def to_ptr(self, rig_ptr, bone_index):
+    def to_ptr(self, rig_ptr, bone_index : int):
         """Returns bone pointer"""
         cont = _CreateStringContainerC()
         _AddBoneToSkeletonRigC(

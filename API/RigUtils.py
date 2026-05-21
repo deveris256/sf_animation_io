@@ -79,7 +79,7 @@ def RigSetBoneAttr(rig, obj):
     """Expects edit mode."""
     for bone in obj.data.edit_bones:
         rig_bone = rig.GetBone(bone.name)
-        rig_bone.SetArmatureBoneAttributes(bone)
+        rig_bone.set_blender_bone_attr(bone)
 
 def rig_list_enum_items(self, context):
     items = [(rig_name, rig_name, "") for rig_name in GetExistingRigs()]
