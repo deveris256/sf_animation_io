@@ -3,7 +3,9 @@ import ctypes
 from API.AnimConverterFunc import _GetMirrorIndexC, _GetTwistBoneDriverIndexC, _GetTwistBoneDriverWeightC, \
     _GetBoneTypeC, _GetSkeletonBoneParentIndexC, _GetSkeletonBoneC, _GetSkeletonBoneNameC, _GetSkeletonBoneRotationC, \
     _GetQuaternionX, _GetQuaternionY, _GetQuaternionZ, _GetQuaternionW, _GetSkeletonBonePositionC, _GetVector3X, \
-    _GetVector3Y, _GetVector3Z, _SFBGSRigPackage_BoneIsMappedC, _SFBGSRigPackage_GetBoneKeyC
+    _GetVector3Y, _GetVector3Z, _SFBGSRigPackage_BoneIsMappedC, _SFBGSRigPackage_GetBoneKeyC, _CreateStringContainerC, \
+    _AddBoneToSkeletonRigC, _SetTwistBonePropertiesC, _SetBoneTypeC, _SetMirrorIndexC, \
+    _SFBGSRigPackage_AddBoneNameToMapC, _GetStringFromContainerC
 
 
 class RigBone():
@@ -194,6 +196,53 @@ class RigBone():
         self.index = index  # TODO
         self.LoadArmatureBoneAttributes(edit_bone)
 
+    def to_ptr(self, rig_ptr, bone_index):
+        """Returns bone pointer"""
+        cont = _CreateStringContainerC()
+        _AddBoneToSkeletonRigC(
+            rig_ptr,
+            self.rotation.x,
+            self.rotation.y,
+            self.rotation.z,
+            self.rotation.w,
+
+            self.translation[0],  # x
+            self.translation[1],  # y
+            self.translation[2],  # z
+
+            self.bone_name.encode('utf-8'),
+
+            self.parent_index if self.parent_index is not None else -1,
+
+            ctypes.c_bool(True),
+
+            cont
+        )
+
+        bone_ptr = _GetSkeletonBoneC(rig_ptr, bone_index, ctypes.c_bool(False))
+
+        if self.mapping != 255:
+            if not _SFBGSRigPackage_AddBoneNameToMapC(
+                    rig_ptr,
+                    self.mapping,
+                    self.bone_name.encode('utf-8'),
+                    cont,
+                    ctypes.c_bool(False)):
+                print((
+                    rig_ptr,
+                    self.mapping,
+                    self.bone_name.encode('utf-8'),
+                    cont,
+                    ctypes.c_bool(False)
+                ))
+                raise Exception(_GetStringFromContainerC(cont).decode('utf-8'))
+
+        _SetBoneTypeC(bone_ptr, self.bone_type)
+        _SetMirrorIndexC(bone_ptr, self.mirror_index)
+
+        if self.bone_type_blender == "Twist":
+            _SetTwistBonePropertiesC(bone_ptr, ctypes.c_bool(True),
+                                     self.twist_bone_driver_index, self.twist_bone_driver_weight, cont)
 
 class RigBoneRotation:
     def __init__(self, rotation_xyzw=None):

@@ -1,7 +1,9 @@
+import ctypes
 import os
 
 from API import AnimationUtils
-from API.AnimConverterFunc import _GetSkeletonRigBoneCountC, _SFBGSRigPackage_GetPrecisionTypeC
+from API.AnimConverterFunc import _GetSkeletonRigBoneCountC, _SFBGSRigPackage_GetPrecisionTypeC, _CreateSkeletonRigC, \
+    _SFBGSRigPackage_AddPackageToSkeletonRigC, _CreateStringContainerC, _AddBoneToSkeletonRigC
 from API.RigBone import RigBone
 
 
@@ -103,6 +105,14 @@ class SkelRig:
         # Post-process
         RevertRigCorrectBones(self.bones, armature_obj, [self.bones[0]])
 
+    def to_ptr(self):
+        """Returns a rig pointer"""
+        cont = _CreateStringContainerC()
+        rig_ptr = _CreateSkeletonRigC(self.name.encode('utf-8'))
+        _SFBGSRigPackage_AddPackageToSkeletonRigC(rig_ptr, cont, ctypes.c_bool(True))
+
+        for idx, bone in enumerate(self.bones):
+            bone.to_ptr(rig_ptr, idx)
 
 def RevertRigCorrectBones(rig_bones, armature_obj, bones, parent_world_mat=None):
     """

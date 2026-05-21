@@ -125,61 +125,10 @@ def ImportRig(rig_path):
     return rig
 
 def ExportRig(obj, output_rig_path):
+    cont = _CreateStringContainerC()
     rig = SkelRig()
     rig.LoadFromArmature(obj)
-
-    cont = _CreateStringContainerC()
-
-    rig_ptr = _CreateSkeletonRigC(rig.name.encode('utf-8'))
-    _SFBGSRigPackage_AddPackageToSkeletonRigC(rig_ptr, cont, ctypes.c_bool(True))
-
-    for idx, bone in enumerate(rig.bones):
-        _AddBoneToSkeletonRigC(
-            rig_ptr,
-            bone.rotation.x,
-            bone.rotation.y,
-            bone.rotation.z,
-            bone.rotation.w,
-
-            bone.translation[0], # x
-            bone.translation[1], # y
-            bone.translation[2], # z
-
-            bone.bone_name.encode('utf-8'),
-
-            bone.parent_index if bone.parent_index is not None else -1,
-
-            ctypes.c_bool(True),
-
-            cont
-        )
-
-        bone_ptr = _GetSkeletonBoneC(rig_ptr, idx, ctypes.c_bool(False))
-
-        if bone.mapping != 255:
-            if _SFBGSRigPackage_AddBoneNameToMapC(
-                rig_ptr,
-                bone.mapping,
-                bone.bone_name.encode('utf-8'),
-                cont,
-                ctypes.c_bool(False)
-            ) == False:
-                print((
-                    rig_ptr,
-                    bone.mapping,
-                    bone.bone_name.encode('utf-8'),
-                    cont,
-                    ctypes.c_bool(False)
-                ))
-                raise Exception(_GetStringFromContainerC(cont).decode('utf-8'))
-
-        _SetBoneTypeC(bone_ptr, bone.bone_type)
-        _SetMirrorIndexC(bone_ptr, bone.mirror_index)
-
-        if bone.bone_type_blender == "Twist":
-            _SetTwistBonePropertiesC(bone_ptr, ctypes.c_bool(True),
-                                     bone.twist_bone_driver_index, bone.twist_bone_driver_weight, cont)
-
+    rig_ptr = rig.to_ptr()
     print(output_rig_path)
     print(_SaveSkeletonRigToSFBGSFormatDirectC(
         rig_ptr,
