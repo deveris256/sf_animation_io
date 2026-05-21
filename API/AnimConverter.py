@@ -7,7 +7,7 @@ from API.AnimConverterFunc import (
     _CreateStringContainerC, _GetStringFromContainerC, _SFBGSRigPackage_AddBoneNameToMapC,
     _SFBGSRigPackage_AddPackageToSkeletonRigC
 )
-from API.AnimationIOWrappers import SkelRig
+from API.SkeletonRig import SkelRig
 from API.Animation import AnimData
 from API.AnimationScene import AnimScene
 

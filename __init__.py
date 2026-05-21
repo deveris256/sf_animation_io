@@ -19,10 +19,11 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
         AnimationIOWrappers,
         RigBone,
         RigUtils,
+        SkeletonRig,
         AnimationUtils,
         AnimationBone,
         AnimationScene,
-        Animation
+        Animation,
     )
 
     imp.reload(CommonUtils)
@@ -35,6 +36,7 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
     imp.reload(AnimationScene)
     imp.reload(AnimationBone)
     imp.reload(AnimConverter)
+    imp.reload(SkeletonRig)
     imp.reload(AnimationOperators)
 
     imp.reload(RigOperators)
