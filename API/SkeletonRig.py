@@ -18,28 +18,27 @@ class SkelRig:
     def __init__(self):
         self.name = "UNKNOWN RIG NAME"
         self.bones = []
-        self._precision = "DEFAULT"
+        self._precision = 0
 
     @property
     def precision(self):
         # Stores int
         return self._precision
 
-    @precision.setter # todo, it looks like it causes problems.
+    @precision.setter
     def precision(self, value):
-        try:
-            if int(value) in list(SkelRig.VALID_PRECISION.keys()):
-                self._precision = value
-                return
-        except:
-            pass
+        precision_ints = list(SkelRig.VALID_PRECISION.keys())
+        precision_strs = list(SkelRig.VALID_PRECISION.values())
 
-        if value in list(SkelRig.VALID_PRECISION.values()):
-            self._precision = list(SkelRig.VALID_PRECISION.keys())[list(SkelRig.VALID_PRECISION.values()).index(value)]
-            return
-
-        raise TypeError(
-            f"Invalid precision specified: \'{value}\'")
+        if isinstance(value, str):
+            if value.isdigit() and int(value) in list(precision_ints):
+                self._precision = int(value)
+            else:
+                self._precision = precision_ints[precision_strs.index(value)]
+        elif value in precision_ints:
+            self._precision = value
+        else:
+            raise TypeError(f"Invalid precision specified: \'{value}\'")
 
     def LoadFromRigPtr(self, rig_ptr, rig_path):
         """
