@@ -16,7 +16,7 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
     from API import (
         AnimConverterFunc,
         AnimConverter,
-        AnimationIOWrappers,
+        AnimFrameData,
         RigBone,
         RigUtils,
         SkeletonRig,
@@ -30,7 +30,7 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
     imp.reload(AnimationUtils)
     imp.reload(RigUtils)
     imp.reload(AnimConverterFunc)
-    imp.reload(AnimationIOWrappers)
+    imp.reload(AnimFrameData)
     imp.reload(RigBone)
     imp.reload(Animation)
     imp.reload(AnimationScene)
@@ -38,7 +38,6 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
     imp.reload(AnimConverter)
     imp.reload(SkeletonRig)
     imp.reload(AnimationOperators)
-
     imp.reload(RigOperators)
 
 bl_info = {

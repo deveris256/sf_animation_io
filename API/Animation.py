@@ -1,6 +1,6 @@
 import ctypes
 
-from API.AnimationIOWrappers import AnimFrameData
+from API.AnimFrameData import AnimFrameData
 import bpy
 import CommonUtils
 from API.AnimConverterFunc import (

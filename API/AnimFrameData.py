@@ -1,11 +1,4 @@
-import mathutils
-
 from API.AnimationBone import AnimBoneData
-
-flip_x = mathutils.Matrix.Scale(-1, 4, (0, 1, 0))
-sca = mathutils.Matrix.Scale(1.000, 4, [1.0, 1.0, 1.0])
-
-already_processed = []
 
 
 class AnimFrameData():
@@ -29,5 +22,3 @@ class AnimFrameData():
         self.bone_data.append(anim_bone)
 
         return self.bone_data.index(self.bone_data[-1])
-
-
