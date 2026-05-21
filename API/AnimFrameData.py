@@ -5,15 +5,15 @@ class AnimFrameData():
     def __init__(self):
         self.bone_data = []
 
-    def GetBoneDataByName(self, bone_name):
+    def get_bone_data_by_name(self, bone_name):
         for bdata in self.bone_data:
             if bdata.bone_name == bone_name:
                 return self.bone_data.index(bdata)
         return None
 
-    def AddGetBoneIndexBoneName(self, bone_name):
-        b = self.GetBoneDataByName(bone_name)
-        if b != None:
+    def add_get_bone_index_by_name(self, bone_name):
+        b = self.get_bone_data_by_name(bone_name)
+        if b is not None:
             return b
 
         anim_bone = AnimBoneData()

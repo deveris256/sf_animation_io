@@ -75,7 +75,7 @@ class AnimData():
                 frame = str(_GetFrameFromScalarEntryC(sqs))
                 frame_data = self.AddGetFrame(frame
                                               )
-                bone_data_idx = frame_data.AddGetBoneIndexBoneName(name)
+                bone_data_idx = frame_data.add_get_bone_index_by_name(name)
                 frame_data.bone_data[bone_data_idx].scale.PtrSetScale(sqs)
 
             tsq_size = _GetTranslationSqSizeC(animBlock)
@@ -84,7 +84,7 @@ class AnimData():
                 frame = str(_GetFrameFromTranslationEntryC(tsq))
                 frame_data = self.AddGetFrame(frame)
 
-                bone_data_idx = frame_data.AddGetBoneIndexBoneName(name)
+                bone_data_idx = frame_data.add_get_bone_index_by_name(name)
                 frame_data.bone_data[bone_data_idx].translation.PtrSetTranslation(tsq)
 
             rsq_size = _GetRotationSqSizeC(animBlock)
@@ -93,7 +93,7 @@ class AnimData():
                 frame = str(_GetFrameFromRotationEntryC(rsq))
                 frame_data = self.AddGetFrame(frame)
 
-                bone_data_idx = frame_data.AddGetBoneIndexBoneName(name)
+                bone_data_idx = frame_data.add_get_bone_index_by_name(name)
                 frame_data.bone_data[bone_data_idx].rotation.PtrSetRotation(rsq)
 
         self.end = self.GetFrameCount()
@@ -149,7 +149,7 @@ class AnimData():
                 rotation = M[1]
                 scale = M[2]
 
-                bone = frame.bone_data[frame.AddGetBoneIndexBoneName(bone_name)]
+                bone = frame.bone_data[frame.add_get_bone_index_by_name(bone_name)]
                 bone.translation.blender = translation
                 bone.rotation.blender_quaternion = rotation
                 bone.scale.blender = scale

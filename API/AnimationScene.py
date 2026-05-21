@@ -65,7 +65,7 @@ class AnimScene:
 
             for frameIdx, frameData in self.animations[anim_index].frames.items():
                 frameIdx = int(frameIdx)
-                internal_bone_idx = frameData.GetBoneDataByName(rigBone.bone_name)  # Unrelated to actual idx
+                internal_bone_idx = frameData.get_bone_data_by_name(rigBone.bone_name)  # Unrelated to actual idx
                 if internal_bone_idx is None: continue  # Bone data is not present in frame, so is None
                 frameBone = frameData.bone_data[internal_bone_idx]
 
