@@ -74,7 +74,6 @@ class RigBone():
 
     def SetArmatureBoneAttributes(self, armature_bone):
         """Sets Armature's bone attributes"""
-
         armature_bone.sf_bone_props.index = self.index
         armature_bone.sf_bone_props.mirror_index = self.mirror_index
         armature_bone.sf_bone_props.bone_type = str(self.bone_type_blender)
@@ -127,11 +126,10 @@ class RigBone():
             self.parent_name = None
             self.parent_index = -1
 
-        err = err.value.decode('utf-8').strip()
-        if not err:
-            print(f"ERROR SETTING BONE PARENT FOR {self.bone_name}", err)
-
     def PtrSetBoneRotation(self, rig_bone):
+        """
+        Sets bone rotation from ptr
+        """
         bone_r = _GetSkeletonBoneRotationC(rig_bone, False)
 
         try:
@@ -144,9 +142,11 @@ class RigBone():
             self.rotation.y = 0.0
             self.rotation.z = 0.0
             self.rotation.w = 0.0
-            print(f"ERROR SETTING ROTATION FOR {self.bone_name}", e)
 
     def PtrSetBoneTranslation(self, rig_bone):
+        """
+        Sets bone translation from ptr
+        """
         bone_t = _GetSkeletonBonePositionC(rig_bone, False)
 
         try:
@@ -157,17 +157,18 @@ class RigBone():
             x = 0.0
             y = 0.0
             z = 0.0
-            print(f"ERROR SETTING TRANSLATION FOR {self.bone_name}", e)
 
         self.translation = (x, y, z)
 
     def PtrSetBoneMapping(self, rig_ptr):
+        """
+        Sets bone mapping from ptr
+        """
         if _SFBGSRigPackage_BoneIsMappedC(rig_ptr, self.bone_name.encode('utf-8')):
             self.mapping = _SFBGSRigPackage_GetBoneKeyC(rig_ptr, self.bone_name.encode('utf-8'))
 
     def LoadBoneFromRig(self, rig_ptr, b_idx):
-        err = ctypes.c_char()
-
+        """Loads bone from rig pointer"""
         rig_bone = _GetSkeletonBoneC(
             rig_ptr,
             b_idx,
@@ -183,20 +184,14 @@ class RigBone():
 
         self.PtrSetBoneAttributes(rig_bone)
 
-        err = err.value.decode('utf-8').strip()
-
-        if not err:
-            print("ERROR LOADING BONE FROM RIG", err)
-
     def LoadBoneFromArmature(self, edit_bone, index=-1):
+        """
+        Loads bone from Blender armature
+        """
         self.bone_name = edit_bone.name
         self.parent_name = edit_bone.parent.name if edit_bone.parent != None else None
         self.parent_index = edit_bone.parent.sf_bone_props.index if edit_bone.parent != None else -1
-
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!", self.parent_index, edit_bone.parent.name if edit_bone.parent != None else None)
-
         self.index = index  # TODO
-
         self.LoadArmatureBoneAttributes(edit_bone)
 
 
