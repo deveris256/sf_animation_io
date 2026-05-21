@@ -105,55 +105,16 @@ class AnimScene:
         self.name = _GetAnimationSceneNameC(animScene).decode('utf-8')
 
         for idx in range(animCount):
-            anim_data = AnimData()
-            anim_data.start = 0
 
-            anim = _GetAnimationC(
+            anim_ptr = _GetAnimationC(
                 animScene,
                 idx,
                 ctypes.c_bool(False)
             )
 
-            anim_data.name = _GetAnimationTitleC(anim).decode('utf-8')
+            anim_data = AnimData()
+            anim_data.load_from_ptr(anim_ptr)
 
-            animBlockCount = _GetAnimationBlockCountC(
-                anim
-            )
-
-            for b_idx in range(animBlockCount):
-                animBlock = _GetAnimationBlockC(
-                    anim,
-                    b_idx,
-                    ctypes.c_bool(False)
-                )
-
-                name = _GetAnimBlockBoneNameC(animBlock).decode('utf-8').strip()
-
-                sqs_size = _GetScalarSqSizeC(animBlock)
-                for s in range(sqs_size):
-                    sqs = _GetScalarFromSqC(animBlock, s, ctypes.c_bool(False))
-                    frame = str(_GetFrameFromScalarEntryC(sqs))
-                    frame_data = anim_data.AddGetFrame(frame)
-                    bone_data_idx = frame_data.AddGetBoneIndexBoneName(name)
-                    frame_data.bone_data[bone_data_idx].scale.PtrSetScale(sqs)
-
-                tsq_size = _GetTranslationSqSizeC(animBlock)
-                for t in range(tsq_size):
-                    tsq = _GetTranslationFromSqC(animBlock, t, ctypes.c_bool(False))
-                    frame = str(_GetFrameFromTranslationEntryC(tsq))
-                    frame_data = anim_data.AddGetFrame(frame)
-                    bone_data_idx = frame_data.AddGetBoneIndexBoneName(name)
-                    frame_data.bone_data[bone_data_idx].translation.PtrSetTranslation(tsq)
-
-                rsq_size = _GetRotationSqSizeC(animBlock)
-                for r in range(rsq_size):
-                    rsq = _GetRotationFromSqC(animBlock, r, ctypes.c_bool(False))
-                    frame = str(_GetFrameFromRotationEntryC(rsq))
-                    frame_data = anim_data.AddGetFrame(frame)
-                    bone_data_idx = frame_data.AddGetBoneIndexBoneName(name)
-                    frame_data.bone_data[bone_data_idx].rotation.PtrSetRotation(rsq)
-
-            anim_data.end = anim_data.GetFrameCount()
             self.AddAnimation(anim_data)
 
 
