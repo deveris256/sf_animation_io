@@ -177,6 +177,25 @@ class AnimBoneData:
         self.bone_name = None
         self.index = None
 
+    def load_from_blender(self, pose_bone, armature, rig_name_id_mapping):
+        M = armature.convert_space(
+            pose_bone=pose_bone,
+            matrix=pose_bone.matrix,
+            from_space='POSE',
+            to_space='LOCAL',
+        ).decompose()
+
+        translation = M[0]
+        rotation = M[1]
+        scale = M[2]
+
+        self.translation.blender = translation
+        self.rotation.blender_quaternion = rotation
+        self.scale.blender = scale
+
+        # id
+        self.index = rig_name_id_mapping[self.bone_name]
+
     def AddDataToBlockPtr(self, frame_idx, anim_block_ptr):
         # SQS
         block_has_data = False

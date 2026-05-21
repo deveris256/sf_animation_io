@@ -126,7 +126,6 @@ class AnimData():
         num_anim_frames += 1
 
         for frame_num in range(0, num_anim_frames, 1):
-
             frame = self.AddGetFrame(frame_num)
             bpy.context.scene.frame_set(frame_num)
 
@@ -135,24 +134,6 @@ class AnimData():
             armature = armature.evaluated_get(depsgraph)
 
             for pose_bone in armature.pose.bones:
-
                 bone_name = pose_bone.name
-
-                M = armature.convert_space(
-                    pose_bone=pose_bone,
-                    matrix=pose_bone.matrix,
-                    from_space='POSE',
-                    to_space='LOCAL',
-                ).decompose()
-
-                translation = M[0]
-                rotation = M[1]
-                scale = M[2]
-
                 bone = frame.bone_data[frame.add_get_bone_index_by_name(bone_name)]
-                bone.translation.blender = translation
-                bone.rotation.blender_quaternion = rotation
-                bone.scale.blender = scale
-
-                #id
-                bone.index = rig_name_id_mapping[bone.bone_name]
+                bone.load_from_blender(pose_bone, armature, rig_name_id_mapping)
