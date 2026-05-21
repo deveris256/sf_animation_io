@@ -5,7 +5,7 @@ from API.AnimConverterFunc import _GetSkeletonRigBoneCountC, _SFBGSRigPackage_Ge
 from API.RigBone import RigBone
 
 
-class SkelRig():
+class SkelRig:
     VALID_PRECISION = {
         0: "DEFAULT",
         1: "FIRST_PERSON",
@@ -23,7 +23,7 @@ class SkelRig():
         # Stores int
         return self._precision
 
-    @precision.setter
+    @precision.setter # todo, it looks like it causes problems.
     def precision(self, value):
         try:
             if int(value) in list(SkelRig.VALID_PRECISION.keys()):
@@ -40,6 +40,9 @@ class SkelRig():
             f"Invalid precision specified: \'{value}\'")
 
     def LoadFromRigPtr(self, rig_ptr, rig_path):
+        """
+        Loads rig from pointer
+        """
         self.name = os.path.basename(rig_path).rpartition(".")[0]
         bone_count = _GetSkeletonRigBoneCountC(rig_ptr)
         self.precision = _SFBGSRigPackage_GetPrecisionTypeC(rig_ptr)
@@ -51,27 +54,42 @@ class SkelRig():
             self.bones.append(bone)
 
     def SetArmatureAttributes(self, armature):
+        """
+        Sets Blender armature attributes
+        """
         armature.sf_rig_props.is_rig = True
         armature.sf_rig_props.rig_name = self.name
         armature.sf_rig_props.rig_precision = SkelRig.VALID_PRECISION[self.precision]
 
     def LoadArmatureAttributes(self, armature):
+        """
+        Loads data from Blender armature attributes
+        """
         self.name = armature.sf_rig_props.rig_name
         self.precision = armature.sf_rig_props.rig_precision
 
     def GetBoneByIndex(self, idx):
+        """
+        Gets bone by index
+        """
         match = [b for b in self.bones if b.index == idx]
         if len(match) >= 1:
             return match[0]
         return None
 
     def GetBone(self, bone_name):
+        """
+        Gets bone by name
+        """
         match = [b for b in self.bones if b.bone_name == bone_name]
         if len(match) >= 1:
             return match[0]
         return None
 
     def LoadFromArmature(self, armature_obj):
+        """
+        Loads data from armature
+        """
         self.LoadArmatureAttributes(armature_obj)
 
         bones = [b for b in armature_obj.data.edit_bones]
@@ -83,11 +101,14 @@ class SkelRig():
             self.bones.append(bone)
 
         # Post-process
-
         RevertRigCorrectBones(self.bones, armature_obj, [self.bones[0]])
 
 
 def RevertRigCorrectBones(rig_bones, armature_obj, bones, parent_world_mat=None):
+    """
+    Recursively reverts rig bone corrections,
+    which were applied on rig import.
+    """
     if not bones:
         return
 
