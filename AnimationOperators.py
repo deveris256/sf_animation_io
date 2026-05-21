@@ -176,7 +176,7 @@ class ImportCustomAnimation(bpy.types.Operator):
             armature_obj.data.name = anim_data.name
             armature_obj.name = anim_data.name
 
-            rig.SetArmatureAttributes(armature_obj)
+            rig.set_blender_armature_attr(armature_obj)
 
             bpy.ops.object.mode_set(mode='POSE')
             for frame_idx, frame in anim_data.frames.items():

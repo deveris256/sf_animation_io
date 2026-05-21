@@ -1,5 +1,6 @@
 import ctypes
 import os
+import bpy
 
 from API import AnimationUtils
 from API.AnimConverterFunc import _GetSkeletonRigBoneCountC, _SFBGSRigPackage_GetPrecisionTypeC, _CreateSkeletonRigC, \
@@ -40,7 +41,7 @@ class SkelRig:
         else:
             raise TypeError(f"Invalid precision specified: \'{value}\'")
 
-    def LoadFromRigPtr(self, rig_ptr, rig_path):
+    def from_ptr(self, rig_ptr, rig_path : str):
         """
         Loads rig from pointer
         """
@@ -54,44 +55,36 @@ class SkelRig:
 
             self.bones.append(bone)
 
-    def SetArmatureAttributes(self, armature):
-        """
-        Sets Blender armature attributes
-        """
+    def set_blender_armature_attr(self, armature : bpy.types.Object):
+        """Sets Blender armature attributes"""
         armature.sf_rig_props.is_rig = True
         armature.sf_rig_props.rig_name = self.name
         armature.sf_rig_props.rig_precision = SkelRig.VALID_PRECISION[self.precision]
 
-    def LoadArmatureAttributes(self, armature):
-        """
-        Loads data from Blender armature attributes
-        """
+    def load_blender_armature_attr(self, armature : bpy.types.Object):
+        """Loads Blender armature attributes"""
         self.name = armature.sf_rig_props.rig_name
         self.precision = armature.sf_rig_props.rig_precision
 
-    def GetBoneByIndex(self, idx):
-        """
-        Gets bone by index
-        """
+    def get_bone_by_index(self, idx : int):
+        """Gets bone by index"""
         match = [b for b in self.bones if b.index == idx]
         if len(match) >= 1:
             return match[0]
         return None
 
-    def GetBone(self, bone_name):
-        """
-        Gets bone by name
-        """
+    def get_bone_by_name(self, bone_name : str):
+        """Gets bone by name"""
         match = [b for b in self.bones if b.bone_name == bone_name]
         if len(match) >= 1:
             return match[0]
         return None
 
-    def LoadFromArmature(self, armature_obj):
+    def from_blender(self, armature_obj : bpy.types.Object):
         """
         Loads data from armature
         """
-        self.LoadArmatureAttributes(armature_obj)
+        self.load_blender_armature_attr(armature_obj)
 
         bones = [b for b in armature_obj.data.edit_bones]
         bones = sorted(bones, key=lambda x: x.sf_bone_props.index)
@@ -102,7 +95,7 @@ class SkelRig:
             self.bones.append(bone)
 
         # Post-process
-        RevertRigCorrectBones(self.bones, armature_obj, [self.bones[0]])
+        revert_rig_bone_correction(self.bones, armature_obj, [self.bones[0]])
 
     def to_ptr(self):
         """Returns a rig pointer"""
@@ -113,7 +106,9 @@ class SkelRig:
         for idx, bone in enumerate(self.bones):
             bone.to_ptr(rig_ptr, idx)
 
-def RevertRigCorrectBones(rig_bones, armature_obj, bones, parent_world_mat=None):
+        return rig_ptr
+
+def revert_rig_bone_correction(rig_bones, armature_obj, bones, parent_world_mat=None):
     """
     Recursively reverts rig bone corrections,
     which were applied on rig import.
@@ -154,7 +149,7 @@ def RevertRigCorrectBones(rig_bones, armature_obj, bones, parent_world_mat=None)
         if len(next_bones) == 0:
             continue
 
-        RevertRigCorrectBones(
+        revert_rig_bone_correction(
             rig_bones,
             armature_obj,
             next_bones,

@@ -93,7 +93,7 @@ class ImportCustomRig(bpy.types.Operator):
         RigUtils.RigSetBoneAttr(rig, armature_obj)
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        rig.SetArmatureAttributes(armature_obj)
+        rig.set_blender_armature_attr(armature_obj)
         return {'FINISHED'}
 
     def invoke(self, context, event):

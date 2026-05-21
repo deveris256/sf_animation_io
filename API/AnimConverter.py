@@ -97,7 +97,7 @@ def GetAllBoneKeyframes(armature_obj, bone_name):
 def ExportAnimation(output_path, rig_obj, rig_path):
     rigData = SkelRig()
     rig_ptr = LoadRigPtr(rig_path)
-    rigData.LoadFromRigPtr(rig_ptr, rig_path)
+    rigData.from_ptr(rig_ptr, rig_path)
 
     animScene = AnimScene()
     animScene.LoadAnimationAttributes(rig_obj)
@@ -120,14 +120,14 @@ def ImportAnimation(rig_path, input_path):
 def ImportRig(rig_path):
     rig_ptr = _LoadSFBGSSkeletonRigFromFileC(rig_path, ctypes.c_bool(False))
     rig = SkelRig()
-    rig.LoadFromRigPtr(rig_ptr, rig_path)
+    rig.from_ptr(rig_ptr, rig_path)
 
     return rig
 
 def ExportRig(obj, output_rig_path):
     cont = _CreateStringContainerC()
     rig = SkelRig()
-    rig.LoadFromArmature(obj)
+    rig.from_blender(obj)
     rig_ptr = rig.to_ptr()
     print(output_rig_path)
     print(_SaveSkeletonRigToSFBGSFormatDirectC(

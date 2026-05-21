@@ -78,7 +78,7 @@ def RigPostProcess(obj):
 def RigSetBoneAttr(rig, obj):
     """Expects edit mode."""
     for bone in obj.data.edit_bones:
-        rig_bone = rig.GetBone(bone.name)
+        rig_bone = rig.get_bone_by_name(bone.name)
         rig_bone.set_blender_bone_attr(bone)
 
 def rig_list_enum_items(self, context):
