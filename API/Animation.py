@@ -1,13 +1,18 @@
 import ctypes
 
-from API.AnimFrameData import AnimFrameData
 import bpy
+
 import CommonUtils
 from API.AnimConverterFunc import (
-    _GetAnimationTitleC, _GetAnimationBlockCountC, _GetAnimationBlockC, _GetAnimBlockBoneNameC, _GetScalarFromSqC,
-    _GetScalarSqSizeC, _GetFrameFromScalarEntryC, _GetTranslationSqSizeC, _GetTranslationFromSqC,
-    _GetFrameFromTranslationEntryC, _GetRotationSqSizeC, _GetRotationFromSqC, _GetFrameFromRotationEntryC
+    _GetAnimationBlockC, _GetScalarSqSizeC, _GetScalarFromSqC,
+    _GetFrameFromScalarFrameC, _GetTranslationSqSizeC, _GetTranslationFromSqC, _GetFrameFromTranslationFrameC,
+    _GetRotationSqSizeC, _GetRotationFromSqC, _GetFrameFromRotationFrameC,
 )
+from API.AnimFrameData import AnimFrameData
+from API.RigUtils import correct_bone_axis
+from API.SkeletonRig import SkelRig
+
+
 class AnimData():
     def __init__(self):
         self.frames = {}
@@ -15,7 +20,7 @@ class AnimData():
         self.start = 0
         self.end = 1
 
-    def SetAnimationAttributes(self, armature_obj):
+    def set_animation_data_attr(self, armature_obj):
         """Sets Blender armature attributes"""
         armature_obj.sf_anim_props.anim_name = self.name
 
@@ -52,53 +57,57 @@ class AnimData():
     #            bones.append(bdata.bone_name)
     #    return bones
 
-    def load_from_ptr(self, anim_ptr):
+    def load_from_ptr(self, anim_ptr : ctypes.c_void_p, rig : SkelRig):
         """Loads animation from pointer"""
         self.start = 0
+        print("Loading animation from pointer...")
+        print(anim_ptr)
+        #self.name = _GetAnimationTitleC(anim_ptr).decode('utf-8')
 
-        self.name = _GetAnimationTitleC(anim_ptr).decode('utf-8')
+        #animBlockCount = _GetAnimationBlockCountC(anim_ptr)
 
-        animBlockCount = _GetAnimationBlockCountC(anim_ptr)
+        for bone in rig.bones:
+            name = bone.bone_name
 
-        for b_idx in range(animBlockCount):
-            animBlock = _GetAnimationBlockC(
+            anim_block = _GetAnimationBlockC(
                 anim_ptr,
-                b_idx,
-                ctypes.c_bool(False)
+                name.encode('utf-8')
             )
 
-            name = _GetAnimBlockBoneNameC(animBlock).decode('utf-8').strip()
+            #name = _GetAnimBlockBoneNameC(animBlock).decode('utf-8').strip()
 
-            sqs_size = _GetScalarSqSizeC(animBlock)
+            sqs_size = _GetScalarSqSizeC(anim_block)
             for s in range(sqs_size):
-                sqs = _GetScalarFromSqC(animBlock, s, ctypes.c_bool(False))
-                frame = str(_GetFrameFromScalarEntryC(sqs))
-                frame_data = self.AddGetFrame(frame
-                                              )
+                sqs = _GetScalarFromSqC(anim_block, s)
+                frame = str(_GetFrameFromScalarFrameC(sqs))
+                frame_data = self.AddGetFrame(frame)
                 bone_data_idx = frame_data.add_get_bone_index_by_name(name)
                 frame_data.bone_data[bone_data_idx].scale.PtrSetScale(sqs)
 
-            tsq_size = _GetTranslationSqSizeC(animBlock)
+            tsq_size = _GetTranslationSqSizeC(anim_block)
             for t in range(tsq_size):
-                tsq = _GetTranslationFromSqC(animBlock, t, ctypes.c_bool(False))
-                frame = str(_GetFrameFromTranslationEntryC(tsq))
+                tsq = _GetTranslationFromSqC(anim_block, t)
+                frame = str(_GetFrameFromTranslationFrameC(tsq))
                 frame_data = self.AddGetFrame(frame)
 
                 bone_data_idx = frame_data.add_get_bone_index_by_name(name)
                 frame_data.bone_data[bone_data_idx].translation.PtrSetTranslation(tsq)
 
-            rsq_size = _GetRotationSqSizeC(animBlock)
+            rsq_size = _GetRotationSqSizeC(anim_block)
             for r in range(rsq_size):
-                rsq = _GetRotationFromSqC(animBlock, r, ctypes.c_bool(False))
-                frame = str(_GetFrameFromRotationEntryC(rsq))
+                rsq = _GetRotationFromSqC(anim_block, r)
+                frame = str(_GetFrameFromRotationFrameC(rsq))
                 frame_data = self.AddGetFrame(frame)
 
                 bone_data_idx = frame_data.add_get_bone_index_by_name(name)
                 frame_data.bone_data[bone_data_idx].rotation.PtrSetRotation(rsq)
-
+        #for _, frame in self.frames.items():
+        #    for bone in frame.bone_data:
+        #        mat = bone.get_matrix()
+        #        bone.set_from_matrix(correct_bone_axis(mat))
         self.end = self.GetFrameCount()
 
-    def LoadFromBlender(self, armature, rig_name_id_mapping):
+    def LoadFromBlender(self, armature):
         """Loads animation from Blender armature"""
         if CommonUtils.GetBlenderVersion()[0] == 5:
             from bpy_extras import anim_utils
@@ -136,4 +145,4 @@ class AnimData():
             for pose_bone in armature.pose.bones:
                 bone_name = pose_bone.name
                 bone = frame.bone_data[frame.add_get_bone_index_by_name(bone_name)]
-                bone.load_from_blender(pose_bone, armature, rig_name_id_mapping)
+                bone.load_from_blender(pose_bone, armature)

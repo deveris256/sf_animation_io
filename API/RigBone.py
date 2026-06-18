@@ -1,12 +1,11 @@
 import ctypes
 import bpy
+import mathutils
 
-from API.AnimConverterFunc import _GetMirrorIndexC, _GetTwistBoneDriverIndexC, _GetTwistBoneDriverWeightC, \
-    _GetBoneTypeC, _GetSkeletonBoneParentIndexC, _GetSkeletonBoneC, _GetSkeletonBoneNameC, _GetSkeletonBoneRotationC, \
-    _GetQuaternionX, _GetQuaternionY, _GetQuaternionZ, _GetQuaternionW, _GetSkeletonBonePositionC, _GetVector3X, \
-    _GetVector3Y, _GetVector3Z, _SFBGSRigPackage_BoneIsMappedC, _SFBGSRigPackage_GetBoneKeyC, _CreateStringContainerC, \
-    _AddBoneToSkeletonRigC, _SetTwistBonePropertiesC, _SetBoneTypeC, _SetMirrorIndexC, \
-    _SFBGSRigPackage_AddBoneNameToMapC, _GetStringFromContainerC
+from API.AnimConverterFunc import (
+    _GetTwistBoneDriverWeightC, _GetSkeletonBoneC, _GetSkeletonBoneNameC, _GetGlobalSkeletonBonePositionC,
+    _GetVector3XC, _GetVector3YC, _GetVector3ZC, _GetQuaternionXC, _GetQuaternionYC, _GetQuaternionZC, _GetQuaternionWC,
+    _GetGlobalSkeletonBoneRotationC, _GetTwistBoneDriverC, _GetBoneTypeC)
 
 
 class RigBone:
@@ -23,18 +22,18 @@ class RigBone:
     bone_types_inv = {v: k for k, v in bone_types.items()}
 
     def __init__(self):
+        self.twist_bone_driver_name = None
         self.bone_name = None
         self.rotation = RigBoneRotation()
         self.translation = None #todo translation class
 
         self.parent_name = None
-        self.parent_index = None
+        self.parent_index = None # deprecate it!
 
         self.index = None
 
         self.rig_bone_index = None
         self.mirror_index = -1
-        self.twist_bone_driver_index = -1
         self.twist_bone_driver_weight = None
         self._bone_type = 0
         self.mapping = int(0xFF)
@@ -75,75 +74,64 @@ class RigBone:
 
         self._bone_type = val
 
-    def set_attributes_from_ptr(self, rig_bone):
+    def get_matrix(self):
+        tra = mathutils.Matrix.Translation(self.translation)
+        rot = mathutils.Quaternion(self.rotation.raw_wxyz).to_matrix().to_4x4()
+        sca = mathutils.Matrix.Scale(1.000, 4, [1.0, 1.0, 1.0])
+        return tra @ rot @ sca
+
+    def set_from_matrix(self, matrix):
+        tra, rot, _ = matrix.decompose()
+        self.translation = tra
+        self.rotation.raw_wxyz = (rot.w, rot.x, rot.y, rot.z)
+
+    def set_attributes_from_ptr(self, rig_bone_ptr):
         """Sets bone attributes"""
         self.rig_bone_index = self.index # TODO TODO
-        self.mirror_index = _GetMirrorIndexC(rig_bone)
-        self.twist_bone_driver_index = _GetTwistBoneDriverIndexC(rig_bone, ctypes.c_bool(False))
-        self.twist_bone_driver_weight = _GetTwistBoneDriverWeightC(rig_bone, ctypes.c_bool(False))
-        self.bone_type = _GetBoneTypeC(rig_bone)
+        #self.mirror_index = _GetMirrorIndexC(rig_bone_ptr)
+        self.twist_bone_driver_name = _GetTwistBoneDriverC(rig_bone_ptr) # TODO
+        self.twist_bone_driver_weight = _GetTwistBoneDriverWeightC(rig_bone_ptr)
+        #self.bone_type = _GetBoneTypeC(rig_bone_ptr) TODO
 
-    def set_parent_from_ptr(self, rig_bone, rig_ptr):
-        """Sets bone parent name and index from SkeletonRig*"""
-        parent_index = _GetSkeletonBoneParentIndexC(rig_bone)
-
-        if parent_index != -1:
-            parent_bone = _GetSkeletonBoneC(
-                rig_ptr,
-                parent_index,
-                ctypes.c_bool(False)
-            )
-            self.parent_name = _GetSkeletonBoneNameC(parent_bone).decode('utf-8').strip()
-            self.parent_index = parent_index
-        else:
-            self.parent_name = None
-            self.parent_index = -1
+    def set_parent_from_ptr(self, rig_bone, parent_name):
+        """Sets bone parent name and index"""
+        self.parent_name = parent_name
 
     def set_rotation_from_ptr(self, rig_bone):
         """Sets bone rotation from ptr"""
-        bone_r = _GetSkeletonBoneRotationC(rig_bone, False)
+        bone_r = _GetGlobalSkeletonBoneRotationC(rig_bone)
 
-        try:
-            self.rotation.x = _GetQuaternionX(bone_r)
-            self.rotation.y = _GetQuaternionY(bone_r)
-            self.rotation.z = _GetQuaternionZ(bone_r)
-            self.rotation.w = _GetQuaternionW(bone_r)
-        except Exception as e:
-            self.rotation.x = 0.0
-            self.rotation.y = 0.0
-            self.rotation.z = 0.0
-            self.rotation.w = 0.0
+        self.rotation.x = _GetQuaternionXC(bone_r)
+        self.rotation.y = _GetQuaternionYC(bone_r)
+        self.rotation.z = _GetQuaternionZC(bone_r)
+        self.rotation.w = _GetQuaternionWC(bone_r)
 
     def set_translation_from_ptr(self, rig_bone):
         """Sets bone translation from ptr"""
-        bone_t = _GetSkeletonBonePositionC(rig_bone, False)
+        bone_t = _GetGlobalSkeletonBonePositionC(rig_bone)
 
-        try:
-            x = _GetVector3X(bone_t)
-            y = _GetVector3Y(bone_t)
-            z = _GetVector3Z(bone_t)
-        except Exception as e:
-            x = 0.0
-            y = 0.0
-            z = 0.0
+        x = _GetVector3XC(bone_t)
+        y = _GetVector3YC(bone_t)
+        z = _GetVector3ZC(bone_t)
 
         self.translation = (x, y, z)
 
-    def set_bone_mapping_from_ptr(self, rig_ptr):
-        """Sets bone mapping from ptr"""
-        if _SFBGSRigPackage_BoneIsMappedC(rig_ptr, self.bone_name.encode('utf-8')):
-            self.mapping = _SFBGSRigPackage_GetBoneKeyC(rig_ptr, self.bone_name.encode('utf-8'))
+    # Deprecated as mapping is no longer managed by the user.
+    # def set_bone_mapping_from_ptr(self, rig_ptr):
+    #     """Sets bone mapping from ptr"""
+    #     if _SFBGSRigPackage_BoneIsMappedC(rig_ptr, self.bone_name.encode('utf-8')):
+    #         self.mapping = _SFBGSRigPackage_GetBoneKeyC(rig_ptr, self.bone_name.encode('utf-8'))
 
     def set_blender_bone_attr(self, armature_bone : bpy.types.EditBone):
         """Sets Blender armature bone attributes"""
-        armature_bone.sf_bone_props.index = self.index
+        #armature_bone.sf_bone_props.index = self.index
         armature_bone.sf_bone_props.mirror_index = self.mirror_index
         armature_bone.sf_bone_props.bone_type = str(self.bone_type_blender)
         armature_bone.sf_bone_props.twist_bone_driver_weight = self.twist_bone_driver_weight
         armature_bone.sf_bone_props.mapping = str(self.mapping)
 
         if RigBone.bone_types[self.bone_type] == "Twist":
-            armature_bone.sf_bone_props.twist_bone_driver_index = self.twist_bone_driver_index
+            armature_bone.sf_bone_props.twist_bone_driver_name = self.twist_bone_driver_name
             armature_bone.sf_bone_props.twist_bone_driver_weight = self.twist_bone_driver_weight
 
     def from_blender(self, edit_bone : bpy.types.EditBone):
@@ -151,35 +139,30 @@ class RigBone:
         self.bone_name = edit_bone.name
         self.parent_name = edit_bone.parent.name if edit_bone.parent != None else None
         self.parent_index = edit_bone.parent.sf_bone_props.index if edit_bone.parent != None else -1
-        self.index = edit_bone.sf_bone_props.index
-        self.mirror_index = edit_bone.sf_bone_props.mirror_index
+        #self.index = edit_bone.sf_bone_props.index
+        #self.mirror_index = edit_bone.sf_bone_props.mirror_index
         self.bone_type_blender = edit_bone.sf_bone_props.bone_type
         self.mapping = int(edit_bone.sf_bone_props.mapping)
 
         if edit_bone.sf_bone_props.bone_type == "Twist":
-            self.twist_bone_driver_index = edit_bone.sf_bone_props.twist_bone_driver_index
+            self.twist_bone_driver_name = edit_bone.sf_bone_props.twist_bone_driver_name
             self.twist_bone_driver_weight = edit_bone.sf_bone_props.twist_bone_driver_weight
 
-    def from_ptr(self, rig_ptr, b_idx : int):
+        self.set_from_matrix(edit_bone.matrix)
+
+    def from_ptr(self, bone_ptr : int, parent_bone_name):
         """Loads bone from rig pointer"""
-        rig_bone = _GetSkeletonBoneC(
-            rig_ptr,
-            b_idx,
-            ctypes.c_bool()
-        )
 
-        self.bone_name = _GetSkeletonBoneNameC(rig_bone).decode('utf-8').strip()
-        self.set_translation_from_ptr(rig_bone)
-        self.set_rotation_from_ptr(rig_bone)
-        self.set_parent_from_ptr(rig_bone, rig_ptr)
-        self.set_bone_mapping_from_ptr(rig_ptr)
-        self.index = b_idx  # TODO
+        self.bone_name = _GetSkeletonBoneNameC(bone_ptr).decode('utf-8').strip()
+        self.set_translation_from_ptr(bone_ptr)
+        self.set_rotation_from_ptr(bone_ptr)
+        self.set_parent_from_ptr(bone_ptr, parent_bone_name)
+        self.index = None
 
-        self.set_attributes_from_ptr(rig_bone)
+        self.set_attributes_from_ptr(bone_ptr)
 
     def to_ptr(self, rig_ptr, bone_index : int):
         """Returns bone pointer"""
-        cont = _CreateStringContainerC()
         _AddBoneToSkeletonRigC(
             rig_ptr,
             self.rotation.x,
@@ -221,9 +204,10 @@ class RigBone:
         _SetBoneTypeC(bone_ptr, self.bone_type)
         _SetMirrorIndexC(bone_ptr, self.mirror_index)
 
+        # TODO BELOW
         if self.bone_type_blender == "Twist":
             _SetTwistBonePropertiesC(bone_ptr, ctypes.c_bool(True),
-                                     self.twist_bone_driver_index, self.twist_bone_driver_weight, cont)
+                                     self.twist_bone_driver_name, self.twist_bone_driver_weight, cont)
 
 class RigBoneRotation:
     def __init__(self, rotation_xyzw=None):
@@ -256,3 +240,10 @@ class RigBoneRotation:
     @property
     def raw_wxyz(self):
         return self.w, self.x, self.y, self.z
+
+    @raw_wxyz.setter
+    def raw_wxyz(self, value):
+        self.x = value[0]
+        self.y = value[1]
+        self.z = value[2]
+        self.w = value[3]

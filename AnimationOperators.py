@@ -4,7 +4,9 @@ import textwrap
 import bpy
 
 from API import AnimConverter
+from API.AnimConverter import ImportRig
 from API.AnimationUtils import LoadAnim
+from API.BlenderSpecificUtils import ensure_bl_mode_on_obj
 from CommonUtils import GenDescriptionBox, PrepareFileName, GenPrettyPropTable, GenPrettyPropTableWithLabel
 from API.RigUtils import (
     rig_list_enum_items,
@@ -193,7 +195,7 @@ class ImportCustomAnimation(bpy.types.Operator):
 
             bpy.ops.object.mode_set(mode='OBJECT')
             anim_scene.SetAnimationAttributes(armature_obj)
-            anim_data.SetAnimationAttributes(armature_obj)
+            anim_data.set_animation_data_attr(armature_obj)
 
 
 
@@ -329,11 +331,11 @@ class ExportCustomAnimation(bpy.types.Operator):
             self.report({'ERROR'}, f"Select armature(s) marked as Animation in Animation IO tab")
             return {'CANCELLED'}
 
+
+        rig_path = GetRigByName(self.selected_rig)
+        registered_rig = ImportRig(rig_path)
+
         for rig_obj in rigs:
-            bpy.ops.object.select_all(action='DESELECT')
-
-            rig_path = GetRigByName(self.selected_rig)
-
             if len(rigs) == 1:
                 path = self.filepath
             else:
@@ -352,13 +354,11 @@ class ExportCustomAnimation(bpy.types.Operator):
                 self.report({'ERROR'}, f"Not an armature: {rig_obj.name}")
                 return {'CANCELLED'}
 
-            ## pose mode
-            bpy.context.view_layer.objects.active = rig_obj
-            bpy.ops.object.mode_set(mode='POSE')
             AnimConverter.ExportAnimation(
                 path,
                 rig_obj,
-                rig_path
+                registered_rig,
+                rig_path,
             )
 
             bpy.ops.object.mode_set(mode='OBJECT')
@@ -434,8 +434,8 @@ class OBJECT_PT_SF_AnimationManagementPanel_BoneMode(bpy.types.Panel):
             box = layout.box()
             box.label(text=bone.name)
             GenPrettyPropTableWithLabel(box, bone.sf_bone_props, {
-                "index": ["Index", None, {}, None],
-                "mirror_index": ["Mirror", ObjGetBoneNameByIndex, {"obj": obj}, None],
+                #"index": ["Index", None, {}, None],
+                #"mirror_index": ["Mirror", ObjGetBoneNameByIndex, {"obj": obj}, None],
                 "bone_type": ["Type", None, {}, None],
             }, space_for_icons=False)
 
@@ -470,7 +470,7 @@ class OBJECT_PT_SF_AnimationManagementPanel_TwistBoneMode(bpy.types.Panel):
             box = layout.box()
             box.label(text=bone.name)
             GenPrettyPropTableWithLabel(box, bone.sf_bone_props, {
-                "twist_bone_driver_index": ["Driver index", ObjGetBoneNameByIndex, {"obj": obj}, None],
+                "twist_bone_driver_name": ["Driver name", ObjGetBoneNameByIndex, {"obj": obj}, None],
                 "twist_bone_driver_weight": ["Driver weight", None, {}, None],
             }, space_for_icons=False)
 

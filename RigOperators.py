@@ -2,6 +2,8 @@ import bpy
 import os
 import textwrap
 from API import AnimConverter, RigUtils
+from API.BlenderSpecificUtils import ensure_object_mode, deselect_all_objects_set_active, ensure_bl_mode_on_obj, worked, \
+    spawn_error
 from API.RigUtils import rig_list_enum_items, GetRigFolder
 from CommonUtils import PrepareFileName, GenDescriptionBox
 
@@ -40,9 +42,13 @@ class ExportCustomRig(bpy.types.Operator):
             self.report({'ERROR'},"Not marked as Starfield rig")
             return
 
-        bpy.ops.object.mode_set(mode='EDIT')
-        AnimConverter.ExportRig(context.object, self.filepath)
-        bpy.ops.object.mode_set(mode='OBJECT')
+        ensure_bl_mode_on_obj("EDIT", context.object)
+
+        did_not_work = worked(AnimConverter.ExportRig, {context.object, self.filepath})
+        if did_not_work:
+            spawn_error(self, did_not_work)
+
+        ensure_object_mode()
 
         self.report({'INFO'}, "Exported rig successfully.")
         return {'FINISHED'}
@@ -82,16 +88,19 @@ class ImportCustomRig(bpy.types.Operator):
 
         rig = AnimConverter.ImportRig(self.filepath)
 
+        ensure_object_mode()
+
         armature_data = bpy.data.armatures.new(name="armature")
         armature_obj = bpy.data.objects.new(name="armature_obj", object_data=armature_data)
         bpy.context.collection.objects.link(armature_obj)
-        bpy.ops.object.select_all(action='DESELECT')
-        bpy.context.view_layer.objects.active = armature_obj
-        bpy.ops.object.mode_set(mode='EDIT')
-        RigUtils.RecursiveCreateRig(armature_obj, rig, [b for b in rig.bones if b.parent_name == None])
+
+        ensure_bl_mode_on_obj("EDIT", armature_obj)
+
+        RigUtils.RecursiveCreateRig(armature_obj, rig, [b for b in rig.bones if b.parent_name is None])
         RigUtils.RigPostProcess(armature_obj)
         RigUtils.RigSetBoneAttr(rig, armature_obj)
-        bpy.ops.object.mode_set(mode='OBJECT')
+
+        ensure_object_mode()
 
         rig.set_blender_armature_attr(armature_obj)
         return {'FINISHED'}
@@ -272,7 +281,7 @@ class SfRigProperties(bpy.types.PropertyGroup):
 class SfRigBoneProperties(bpy.types.PropertyGroup):
     index: bpy.props.IntProperty(name="Index", default=-1, min=0)
     mirror_index: bpy.props.IntProperty(name="Mirror index", default=-1, min=-1)
-    twist_bone_driver_index: bpy.props.IntProperty(name="Driver index", default=-1, min=-1)
+    twist_bone_driver_name: bpy.props.StringProperty(name="Driver Name", default="INVALID")
     twist_bone_driver_weight: bpy.props.FloatProperty(name="Driver weight", default=0.0, min=0.0, soft_max=1.0)
     bone_type: bpy.props.EnumProperty(
         name="Bone type",

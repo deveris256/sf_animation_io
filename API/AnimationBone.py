@@ -2,12 +2,14 @@ import ctypes
 
 import mathutils
 
-from API.AnimConverterFunc import _CreateScalarEntryC, _AddScalarSqToAnimBlockC, _CreateTranslationEntryC, \
-    _AddTranslationSqToAnimBlockC, _CreateRotationEntryC, _AddRotationSqToAnimBlockC, _GetTranslationSqSizeC, \
-    _GetTranslationFromSqC, _GetVector3DX, _GetVector3DZ, _GetVector3DY, _GetValueFromTranslationEntryC, \
-    _GetValueFromScalarEntryC, _GetValueFromRotationEntryC, _GetQuaternionX, _GetQuaternionY, _GetQuaternionW, \
-    _GetQuaternionZ
-from API.AnimationUtils import BoneAxisCorrection, BoneAxisCorrectionInv
+from API.AnimConverterFunc import (
+    _GetValueFromScalarFrameC, _GetValueFromRotationFrameC, _GetQuaternionXC, _GetQuaternionYC, _GetQuaternionZC,
+    _GetQuaternionWC, _GetValueFromTranslationFrameC, _GetVector3DXC, _GetVector3DYC, _GetVector3DZC,
+    _CreateScalarFrameC, _AddScalarSqToAnimBlockC, _AddTranslationSqToAnimBlockC, _CreateTranslationFrameC,
+    _CreateRotationFrameC, _AddRotationSqToAnimBlockC,
+)
+from API.RigUtils import correct_bone_axis, inv_correct_bone_axis
+
 
 class AnimationBoneScale:
     """
@@ -39,7 +41,7 @@ class AnimationBoneScale:
         self.raw_scale = max(value)
 
     def PtrSetScale(self, sqs):
-        sqs_uniform = _GetValueFromScalarEntryC(sqs)
+        sqs_uniform = _GetValueFromScalarFrameC(sqs)
         self.raw = sqs_uniform
 
 class AnimationBoneRotation:
@@ -80,40 +82,37 @@ class AnimationBoneRotation:
     def raw_wxyz(self):
         return self.w, self.x, self.y, self.z
 
-    @property
-    def blender_quaternion(self):
-        return AnimationBoneRotation.RsqRotationToBlenderQuaternion(self.raw_wxyz)
+    @raw_wxyz.setter
+    def raw_wxyz(self, value):
+        self.w = value[0]
+        self.x = value[1]
+        self.y = value[2]
+        self.z = value[3]
+        raise Exception(len(value))
 
-    @blender_quaternion.setter
-    def blender_quaternion(self, value):
-        quat = AnimationBoneRotation.BlenderQuaternionToRsqRotation(value)
-        self.x = quat.x
-        self.y = quat.y
-        self.z = quat.z
-        self.w = quat.w
+    def get_blender_compatible_euler(self):
+        """""" # TODO
 
-    @property
-    def blender_euler(self):
-        rot = self.blender_quaternion.to_euler()
-        return rot.x, rot.y, rot.z
-
-    def RsqRotationToBlenderQuaternion(raw_quaternion: tuple[float, float, float, float]):
-        R_src = mathutils.Quaternion(raw_quaternion).to_matrix().to_4x4()
-        R_bpy = BoneAxisCorrection(R_src)
-        return R_bpy.to_quaternion()
-
-    def BlenderQuaternionToRsqRotation(blender_quaternion: mathutils.Quaternion):
-        R_src = blender_quaternion.to_matrix().to_4x4()
-        R_raw = BoneAxisCorrectionInv(R_src)
-        return R_raw.to_quaternion()
+    #def get_blender_compatible_quat(self):
+    #    src = mathutils.Quaternion(self.raw_wxyz).to_matrix().to_4x4()
+    #    return correct_bone_axis(src).to_quaternion()
+#
+    #def get_blender_compatible_quat_tuple(self):
+    #    q = self.get_blender_compatible_quat()
+    #    return q.w, q.x, q.y, q.z
+#
+    #def BlenderQuaternionToRsqRotation(blender_quaternion: mathutils.Quaternion):
+    #    R_src = blender_quaternion.to_matrix().to_4x4()
+    #    #R_raw = BoneAxisCorrectionInv(R_src)
+    #    return R_src.to_quaternion()
 
     def PtrSetRotation(self, rsq):
-        quat = _GetValueFromRotationEntryC(rsq)
+        quat = _GetValueFromRotationFrameC(rsq)
 
-        r_x = _GetQuaternionX(quat)
-        r_y = _GetQuaternionY(quat)
-        r_z = _GetQuaternionZ(quat)
-        r_w = _GetQuaternionW(quat)
+        r_x = _GetQuaternionXC(quat)
+        r_y = _GetQuaternionYC(quat)
+        r_z = _GetQuaternionZC(quat)
+        r_w = _GetQuaternionWC(quat)
 
         self.raw_xyzw = (r_x, r_y, r_z, r_w)
 
@@ -144,23 +143,24 @@ class AnimationBoneTranslation:
 
     @property
     def blender(self):
-        x = -self.y
-        y = self.x
+        x = self.x
+        y = self.y
         z = self.z
         return x, y, z
 
     @blender.setter
     def blender(self, value):
-        self.x = value[1]
-        self.y = -value[0]
+        self.x = value[0]
+        self.y = value[1]
         self.z = value[2]
+        raise
 
     def PtrSetTranslation(self, tsq):
-        vec = _GetValueFromTranslationEntryC(tsq)
+        vec = _GetValueFromTranslationFrameC(tsq)
 
-        t_x = _GetVector3DX(vec)
-        t_y = _GetVector3DY(vec)
-        t_z = _GetVector3DZ(vec)
+        t_x = _GetVector3DXC(vec)
+        t_y = _GetVector3DYC(vec)
+        t_z = _GetVector3DZC(vec)
 
         self.raw = (t_x, t_y, t_z)
 
@@ -177,7 +177,29 @@ class AnimBoneData:
         self.bone_name = None
         self.index = None
 
-    def load_from_blender(self, pose_bone, armature, rig_name_id_mapping):
+    def get_matrix(self):
+        if self.translation.is_none:
+            tra = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+        else:
+            tra = mathutils.Matrix.Translation(self.translation.blender)
+        if self.rotation.is_none:
+            rot = mathutils.Matrix.Rotation(0, 4, (0,0,0))
+        else:
+            rot = mathutils.Quaternion(self.rotation.raw_wxyz).to_matrix().to_4x4()
+
+        if self.scale.is_none:
+            sca = mathutils.Matrix.Scale(1.0, 4, (1.0, 1.0, 1.0))
+        else:
+            sca = mathutils.Matrix.Scale(1.000, 4, self.scale.blender)
+        return tra @ rot @ sca
+
+    def set_from_matrix(self, matrix):
+        tra, rot, sca = matrix.decompose()
+        self.translation.blender = tra
+        self.rotation.raw_wxyz = rot
+        self.scale.blender = sca
+
+    def load_from_blender(self, pose_bone, armature):
         M = armature.convert_space(
             pose_bone=pose_bone,
             matrix=pose_bone.matrix,
@@ -190,11 +212,11 @@ class AnimBoneData:
         scale = M[2]
 
         self.translation.blender = translation
-        self.rotation.blender_quaternion = rotation
+        self.rotation.raw_wxyz = rotation.wxyz
         self.scale.blender = scale
 
         # id
-        self.index = rig_name_id_mapping[self.bone_name]
+        #self.index = rig_name_id_mapping[self.bone_name]
 
     def AddDataToBlockPtr(self, frame_idx, anim_block_ptr):
         # SQS
@@ -202,7 +224,7 @@ class AnimBoneData:
         if not self.scale.is_none:
             block_has_data = True
             sqs_entry_float = self.scale.raw
-            sqs = _CreateScalarEntryC(
+            sqs = _CreateScalarFrameC(
                 frame_idx,
                 sqs_entry_float
             )
@@ -214,7 +236,7 @@ class AnimBoneData:
         if not self.translation.is_none:
             block_has_data = True
             tsq_entry_tuple = self.translation.raw
-            tsq = _CreateTranslationEntryC(
+            tsq = _CreateTranslationFrameC(
                 frame_idx,
                 tsq_entry_tuple[0],
                 tsq_entry_tuple[1],
@@ -228,7 +250,7 @@ class AnimBoneData:
             block_has_data = True
             rsq_entry_tuple = self.rotation.raw_xyzw
 
-            rsq = _CreateRotationEntryC(
+            rsq = _CreateRotationFrameC(
                 frame_idx,
                 rsq_entry_tuple[0], rsq_entry_tuple[1],
                 rsq_entry_tuple[2], rsq_entry_tuple[3])

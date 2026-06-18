@@ -2,8 +2,20 @@ import os
 import shutil
 
 import mathutils
+import math
+from bpy_extras.io_utils import axis_conversion
 
-from API.AnimationUtils import BoneAxisCorrection_Alt, BoneAxisCorrectionInv, BoneAxisCorrection
+bone_axis_correction = mathutils.Matrix.Rotation(math.radians(90.0), 4, 'Z')
+bone_axis_correction_inv = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
+
+bone_axis_correction_full = mathutils.Matrix.Rotation(math.radians(180.0), 4, 'Z')
+bone_axis_correction_full_inv = mathutils.Matrix.Rotation(math.radians(-180.0), 4, 'Z')
+
+def correct_bone_axis(t):
+    return bone_axis_correction_full @ t @ bone_axis_correction_inv
+
+def inv_correct_bone_axis(t):
+    return bone_axis_correction_full_inv @ t @ bone_axis_correction
 
 def GetRigByName(name):
     path = os.path.join(GetRigFolder(), f"{name}.rig")
@@ -37,9 +49,11 @@ def RegisterRigFile(rig_path, rig_name):
     destination_path = os.path.join(GetRigFolder(), f"{rig_name}.rig")
     shutil.copyfile(source_path, destination_path)
 
-def RecursiveCreateRig(obj, rig_data, current_list=[]):
+def RecursiveCreateRig(obj, rig_data, current_list=None):
+    if current_list is None:
+        current_list = []
+
     edit_bones = obj.data.edit_bones
-    bones = obj.data.bones
 
     for rig_bone in current_list:
         if edit_bones.get(rig_bone.bone_name) == None:
@@ -61,7 +75,6 @@ def RecursiveCreateRig(obj, rig_data, current_list=[]):
 
         if rig_bone.parent_name is not None:
             pose_bone.parent = edit_bones.get(rig_bone.parent_name)
-            pose_bone.matrix = pose_bone.parent.matrix @ pose_bone.matrix
 
         cur_list = [
             b for b in rig_data.bones if b.bone_name not in [b.name for b in edit_bones] and
@@ -73,7 +86,7 @@ def RecursiveCreateRig(obj, rig_data, current_list=[]):
 def RigPostProcess(obj):
     """Expects edit mode."""
     for edit_bone in obj.data.edit_bones:
-        edit_bone.matrix = BoneAxisCorrection_Alt(edit_bone.matrix)
+        edit_bone.matrix = correct_bone_axis(edit_bone.matrix)
 
 def RigSetBoneAttr(rig, obj):
     """Expects edit mode."""
@@ -86,3 +99,25 @@ def rig_list_enum_items(self, context):
     if len(items) == 0:
         items.append(("NONE", "NONE", "NO RIGS FOUND"))
     return items
+
+if __name__ == "__main__":
+    import mathutils
+    test_val = (1.5, 2.1, 0.3)
+    test = mathutils.Matrix.Translation(mathutils.Vector(test_val)).to_4x4() @ \
+        mathutils.Euler((math.radians(90), math.radians(90), math.radians(90))).to_matrix().to_4x4()
+
+    test_mat = correct_bone_axis(test)
+
+    print([round(r, 4) for r in test_mat.translation])
+    print([round(r, 4) for r in test.translation])
+
+    print("EULER")
+    print([math.degrees(r) for r in test.to_euler()])
+    print([math.degrees(r) for r in test_mat.to_euler()])
+
+    test_out = inv_correct_bone_axis(test_mat)
+
+    print("EULER OUT")
+    print([math.degrees(r) for r in test.to_euler()])
+    print([math.degrees(r) for r in test_out.to_euler()])
+

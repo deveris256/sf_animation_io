@@ -3,10 +3,10 @@ import os
 import bpy
 
 from API import AnimationUtils
-from API.AnimConverterFunc import _GetSkeletonRigBoneCountC, _SFBGSRigPackage_GetPrecisionTypeC, _CreateSkeletonRigC, \
-    _SFBGSRigPackage_AddPackageToSkeletonRigC, _CreateStringContainerC, _AddBoneToSkeletonRigC
 from API.RigBone import RigBone
-
+from API.AnimConverterFunc import (
+    _GetSkeletonRigBoneCountC, _CreateSkeletonRigC, _GetSkeletonBoneC, _GetSkeletonBoneChildC,
+)
 
 class SkelRig:
     VALID_PRECISION = {
@@ -45,15 +45,31 @@ class SkelRig:
         """
         Loads rig from pointer
         """
+        #print(rig_ptr)
         self.name = os.path.basename(rig_path).rpartition(".")[0]
         bone_count = _GetSkeletonRigBoneCountC(rig_ptr)
-        self.precision = _SFBGSRigPackage_GetPrecisionTypeC(rig_ptr)
 
-        for b_idx in range(bone_count):
+        #self.precision = _SFBGSRigPackage_GetPrecisionTypeC(rig_ptr)
+        print(bone_count)
+
+        root_bone_ptr = _GetSkeletonBoneC(rig_ptr, "Root".encode('utf-8'))
+        root_bone = RigBone()
+        root_bone.from_ptr(root_bone_ptr, None)
+        self.bones.append(root_bone)
+
+        self.bones_from_ptr_recursive(rig_ptr, bone_count, "Root", root_bone_ptr)
+
+    def bones_from_ptr_recursive(self, rig_ptr, bone_count, parent_bone_name, parent_bone):
+        for child_idx in range(bone_count):
+            child_ptr = _GetSkeletonBoneChildC(parent_bone, child_idx)
+            if child_ptr is None: break
+
             bone = RigBone()
-            bone.from_ptr(rig_ptr, b_idx)
+            bone.from_ptr(child_ptr, parent_bone_name)
+            print("FROM PTR", bone.bone_name, parent_bone_name)
 
             self.bones.append(bone)
+            self.bones_from_ptr_recursive(rig_ptr, bone_count, bone.bone_name, child_ptr)
 
     def set_blender_armature_attr(self, armature : bpy.types.Object):
         """Sets Blender armature attributes"""
@@ -86,72 +102,24 @@ class SkelRig:
         """
         self.load_blender_armature_attr(armature_obj)
 
-        bones = [b for b in armature_obj.data.edit_bones]
-        bones = sorted(bones, key=lambda x: x.sf_bone_props.index)
+        if len(armature_obj.data.edit_bones) == 0:
+            raise Exception("Zero bones found")
 
-        for b in bones:
+        for b in armature_obj.data.edit_bones:
             bone = RigBone()
-            bone.from_blender(armature_obj.data.edit_bones.get(b.name))
+            bone.from_blender(b)
             self.bones.append(bone)
 
         # Post-process
-        revert_rig_bone_correction(self.bones, armature_obj, [self.bones[0]])
+        #revert_rig_bone_correction(self.bones, armature_obj, [self.bones[0]])
 
     def to_ptr(self):
         """Returns a rig pointer"""
-        cont = _CreateStringContainerC()
+        #cont = _CreateStringContainerC()
         rig_ptr = _CreateSkeletonRigC(self.name.encode('utf-8'))
-        _SFBGSRigPackage_AddPackageToSkeletonRigC(rig_ptr, cont, ctypes.c_bool(True))
+        #_SFBGSRigPackage_AddPackageToSkeletonRigC(rig_ptr, cont, ctypes.c_bool(True))
 
         for idx, bone in enumerate(self.bones):
             bone.to_ptr(rig_ptr, idx)
 
         return rig_ptr
-
-def revert_rig_bone_correction(rig_bones, armature_obj, bones, parent_world_mat=None):
-    """
-    Recursively reverts rig bone corrections,
-    which were applied on rig import.
-    """
-    if not bones:
-        return
-
-    for rig_bone in bones:
-        bone = armature_obj.data.bones.get(rig_bone.bone_name)
-        world_mat = bone.matrix_local.copy()
-        world_mat = (
-                world_mat @
-                AnimationUtils.bone_axis_correction_full
-        )
-
-        world_mat = (
-                AnimationUtils.bone_axis_correction_full @
-                world_mat @
-                AnimationUtils.bone_axis_correction_inv
-        )
-        if parent_world_mat is not None:
-            local_mat = parent_world_mat.inverted() @ world_mat
-        else:
-            local_mat = world_mat
-
-        loc, rot, sca = local_mat.decompose()
-
-        rot = rot.normalized()
-
-        rig_bone.translation = loc
-        rig_bone.rotation.x = rot.x
-        rig_bone.rotation.y = rot.y
-        rig_bone.rotation.z = rot.z
-        rig_bone.rotation.w = rot.w
-
-        next_bones = [b for b in rig_bones if b.parent_name == rig_bone.bone_name]
-
-        if len(next_bones) == 0:
-            continue
-
-        revert_rig_bone_correction(
-            rig_bones,
-            armature_obj,
-            next_bones,
-            world_mat
-        )

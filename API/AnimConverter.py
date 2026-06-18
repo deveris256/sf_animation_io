@@ -1,23 +1,19 @@
 import ctypes
 
 from API.AnimConverterFunc import (
-    _LoadSFBGSSkeletonRigFromFileC, _SaveAnimationToSFBGSFormatWithExistingRigDirectC,
-    _CreateSkeletonRigC, _AddBoneToSkeletonRigC, _GetSkeletonBoneC,
-    _SetBoneTypeC, _SetTwistBonePropertiesC, _SetMirrorIndexC, _SaveSkeletonRigToSFBGSFormatDirectC,
-    _CreateStringContainerC, _GetStringFromContainerC, _SFBGSRigPackage_AddBoneNameToMapC,
-    _SFBGSRigPackage_AddPackageToSkeletonRigC
+    _LoadSFBGSSkeletonRigFromFileC, _SaveSkeletonRigToSFBGSFormatDirectC,
+    _SaveAnimationToSFBGSFormatWithExistingRigDirectC, _DeleteSkeletonRigC,
 )
-from API.SkeletonRig import SkelRig
-from API.Animation import AnimData
 from API.AnimationScene import AnimScene
+from API.BlenderSpecificUtils import ensure_object_mode, deselect_all_objects_set_active, ensure_bl_mode_on_obj
+from API.SkeletonRig import SkelRig
 
 
 def LoadRigPtr(rig_path):
     err = ctypes.c_char()
     print("Rig path:", rig_path)
     rigPtr = _LoadSFBGSSkeletonRigFromFileC(
-        ctypes.c_wchar_p(rig_path),
-        ctypes.c_bool(False)
+        ctypes.c_wchar_p(rig_path)
     )
     return rigPtr
 
@@ -94,46 +90,49 @@ def GetAllBoneKeyframes(armature_obj, bone_name):
         print(f"No keyframes found for {bone_name}")
     return keyframes
 
-def ExportAnimation(output_path, rig_obj, rig_path):
-    rigData = SkelRig()
-    rig_ptr = LoadRigPtr(rig_path)
-    rigData.from_ptr(rig_ptr, rig_path)
+def ExportAnimation(output_path, bl_rig_obj, reg_rig, rig_path):
 
+    bl_rig = SkelRig()
+    ensure_bl_mode_on_obj('EDIT', bl_rig_obj)
+    bl_rig.from_blender(bl_rig_obj)
+
+    ensure_bl_mode_on_obj('POSE', bl_rig_obj)
     animScene = AnimScene()
-    animScene.LoadAnimationAttributes(rig_obj)
-    animScene.AddNewAnimationFromBlender(rig_obj, rigData)
+    animScene.LoadAnimationAttributes(bl_rig_obj)
+    animScene.AddNewAnimationFromBlender(bl_rig_obj)
+    animScene.correct_with_registered_rig(bl_rig, reg_rig)
 
-    animScenePtr = animScene.GetAnimationPtr(rigData, rig_path, 0)
+    reg_rig_ptr = _LoadSFBGSSkeletonRigFromFileC(rig_path)
+    animScenePtr = animScene.GetAnimationPtr(bl_rig, reg_rig_ptr,0)
 
     print(_SaveAnimationToSFBGSFormatWithExistingRigDirectC(
         animScenePtr,
         output_path,
         rig_path,
-        ctypes.c_bool(False)
     ))
+    ensure_object_mode()
 
 def ImportAnimation(rig_path, input_path):
+    rig_ptr = _LoadSFBGSSkeletonRigFromFileC(rig_path)
+    rig = SkelRig()
+    rig.from_ptr(rig_ptr, rig_path)
+
     animScene = AnimScene()
     animScene.ConstructFromFile(input_path, rig_path)
     return animScene
 
 def ImportRig(rig_path):
-    rig_ptr = _LoadSFBGSSkeletonRigFromFileC(rig_path, ctypes.c_bool(False))
+    rig_ptr = _LoadSFBGSSkeletonRigFromFileC(rig_path)
     rig = SkelRig()
     rig.from_ptr(rig_ptr, rig_path)
 
     return rig
 
 def ExportRig(obj, output_rig_path):
-    cont = _CreateStringContainerC()
     rig = SkelRig()
     rig.from_blender(obj)
     rig_ptr = rig.to_ptr()
-    print(output_rig_path)
-    print(_SaveSkeletonRigToSFBGSFormatDirectC(
+    _SaveSkeletonRigToSFBGSFormatDirectC(
         rig_ptr,
-        ctypes.c_wchar_p(output_rig_path),
-        cont
-    ))
-
-    print(_GetStringFromContainerC(cont).decode('utf-8'))
+        ctypes.c_wchar_p(output_rig_path)
+    )

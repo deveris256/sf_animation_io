@@ -14,6 +14,7 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
     # Modules
     import imp
     from API import (
+        BlenderSpecificUtils,
         AnimConverterFunc,
         AnimConverter,
         AnimFrameData,
@@ -25,18 +26,18 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
         AnimationScene,
         Animation,
     )
-
+    imp.reload(BlenderSpecificUtils)
+    imp.reload(AnimConverterFunc)
+    imp.reload(AnimationScene)
+    imp.reload(SkeletonRig)
+    imp.reload(AnimConverter)
     imp.reload(CommonUtils)
     imp.reload(AnimationUtils)
     imp.reload(RigUtils)
-    imp.reload(AnimConverterFunc)
     imp.reload(AnimFrameData)
     imp.reload(RigBone)
     imp.reload(Animation)
-    imp.reload(AnimationScene)
     imp.reload(AnimationBone)
-    imp.reload(AnimConverter)
-    imp.reload(SkeletonRig)
     imp.reload(AnimationOperators)
     imp.reload(RigOperators)
 

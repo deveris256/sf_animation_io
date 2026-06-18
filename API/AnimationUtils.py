@@ -1,20 +1,10 @@
 import math
 import mathutils
+from bpy_extras.io_utils import axis_conversion
 
-bone_axis_correction = mathutils.Matrix.Rotation(math.radians(90.0), 4, 'Z')
-bone_axis_correction_inv = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
+from API.RigUtils import correct_bone_axis, inv_correct_bone_axis, bone_axis_correction_full, bone_axis_correction, \
+    bone_axis_correction_inv, bone_axis_correction_full_inv
 
-bone_axis_correction_full = mathutils.Matrix.Rotation(math.radians(180.0), 4, 'Z')
-bone_axis_correction_full_inv = mathutils.Matrix.Rotation(math.radians(-180.0), 4, 'Z')
-
-def BoneAxisCorrection(T):
-    return bone_axis_correction @ T @ bone_axis_correction_inv
-
-def BoneAxisCorrectionInv(T):
-    return bone_axis_correction_inv @ T @ bone_axis_correction
-
-def BoneAxisCorrection_Alt(T):
-    return (bone_axis_correction_full @ T @ bone_axis_correction_inv)
 
 def LoadAnim(armature_obj, frame_num, frame_bones_list):
     pose_bones = armature_obj.pose.bones
@@ -25,19 +15,95 @@ def LoadAnim(armature_obj, frame_num, frame_bones_list):
         else:
             pose_bone = pose_bones.get(frame_bone.bone_name)
 
-        SetAnimationBoneMatrix(frame_bone, pose_bone, frame_num)
+        SetAnimationBoneMatrix(armature_obj, frame_bone, pose_bone, frame_num)
 
-def SetAnimationBoneMatrix(frame_bone, pose_bone, frame_num):
+def SetAnimationBoneMatrix(armature, frame_bone, pose_bone, frame_num):
     pose_bone.rotation_mode = 'QUATERNION'
 
-    if not frame_bone.scale.is_none:
-        pose_bone.scale = frame_bone.scale.blender
+    rotate = False
+    translate = False
+    scale = False
+
+    if frame_bone.scale.is_none:
+        s = mathutils.Matrix.Identity(4)
+    else:
+        scale = True
+        s = mathutils.Matrix.Scale(frame_bone.scale.raw, 4)
+
+    if frame_bone.translation.is_none:
+        t = mathutils.Matrix.Identity(4)
+    else:
+        translate = True
+        t = mathutils.Matrix.Translation(frame_bone.translation.raw).to_4x4()
+
+    if frame_bone.rotation.is_none:
+        r = mathutils.Matrix.Identity(4)
+    else:
+        rotate = True
+        r = mathutils.Quaternion(frame_bone.rotation.raw_wxyz).to_matrix().to_4x4()
+
+    print(t.translation)
+    print(r.to_euler())
+    print(s)
+
+    r = r.to_euler()
+    r_temp = r.copy()
+
+    r.x = -r_temp.y
+    r.y = -r_temp.x
+    r.z = -r_temp.z
+
+    r = r.to_matrix().to_4x4()
+
+
+    mat = t @ r @ s
+    #mat = armature.convert_space(
+    #    pose_bone=pose_bone,
+    #    matrix=mat,
+    #    from_space="POSE",
+    #    to_space="LOCAL"
+    #).to_3x3()
+   # mat = mat.to_3x3()
+    # Y = up
+
+    #mat = mat @ mathutils.Matrix.Rotation(math.radians(-180), 3, 'Y')
+    #mat = mathutils.Matrix.Rotation(math.radians(-90), 4, 'Y') @ mat
+    #mat = mathutils.Matrix.Rotation(math.radians(90), 4, 'Z') @ mat
+    #mat = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X') @ mat
+    #mat.rotate(mathutils.Matrix.Rotation(math.radians(180), 3, 'Y'))
+    #mat.rotate(mathutils.Matrix.Rotation(math.radians(-90), 3, 'Y'))
+    #mat = mat.to_4x4() @ bone_axis_correction_full_inv
+    #.rotate(mathutils.Matrix.Rotation(math.radians(180), 3, 'Y'))
+    #mat.rotate(mathutils.Matrix.Rotation(math.radians(-90), 3, 'X'))
+    #mat = correct_bone_axis(mat.to_4x4()).to_3x3()
+    #mat.rotate(mathutils.Matrix.Rotation(math.radians(90), 3, 'X'))
+    #mat.rotate(mathutils.Matrix.Rotation(math.radians(-90.0), 3, 'Y'))
+    #mat.rotate(mathutils.Matrix.Rotation(math.radians(180.0), 3, 'Z'))
+    #mat = mat.to_4x4()
+    #mat = armature.convert_space(
+    #    pose_bone=pose_bone,
+    #    matrix=mat,
+    #    from_space="LOCAL",
+    #    to_space="POSE"
+    #)
+
+    #mat = armature.convert_space(
+    #    pose_bone=pose_bone,
+    #    matrix=mat,
+    #    from_space="WORLD",
+    #    to_space="POSE"
+    #)
+
+    t, r, s = mat.decompose()
+
+    if scale:
+        pose_bone.scale = list(s.to_scale())
         pose_bone.keyframe_insert(data_path='scale', frame=frame_num)
-    if not frame_bone.translation.is_none:
-        pose_bone.location = frame_bone.translation.blender
+
+    if translate:
+        pose_bone.location = t
         pose_bone.keyframe_insert(data_path='location', frame=frame_num)
-    if not frame_bone.rotation.is_none:
-        pose_bone.rotation_quaternion = frame_bone.rotation.blender_quaternion
+
+    if rotate:
+        pose_bone.rotation_quaternion = r
         pose_bone.keyframe_insert(data_path='rotation_quaternion', frame=frame_num)
-        temp = frame_bone.rotation.blender_quaternion.to_euler()
-        print(math.degrees(temp.x), math.degrees(temp.y), math.degrees(temp.z))
