@@ -11,6 +11,20 @@ bone_axis_correction_inv = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z'
 bone_axis_correction_full = mathutils.Matrix.Rotation(math.radians(180.0), 4, 'Z')
 bone_axis_correction_full_inv = mathutils.Matrix.Rotation(math.radians(-180.0), 4, 'Z')
 
+def correct_object_axis(obj, system = 'GLOBAL'):
+    #first rotation
+    applied = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
+    #second rotation
+    applied = mathutils.Matrix.Rotation(math.radians(180.0), 4, 'Y') @ applied
+
+    if space == 'GLOBAL':
+        # Multiply the rotation matrix BEFORE the object's current matrix
+        obj.matrix_world = applied @ obj.matrix_world
+    elif space == 'LOCAL':
+        # Multiply the rotation matrix AFTER the object's current matrix
+        obj.matrix_world = obj.matrix_world @ applied
+
+
 def correct_bone_axis(t):
     return bone_axis_correction_full @ t @ bone_axis_correction_inv
 
