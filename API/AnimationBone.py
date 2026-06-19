@@ -8,8 +8,6 @@ from API.AnimConverterFunc import (
     _CreateScalarFrameC, _AddScalarSqToAnimBlockC, _AddTranslationSqToAnimBlockC, _CreateTranslationFrameC,
     _CreateRotationFrameC, _AddRotationSqToAnimBlockC,
 )
-from API.RigUtils import correct_bone_axis, inv_correct_bone_axis
-
 
 class AnimationBoneScale:
     """
@@ -92,19 +90,6 @@ class AnimationBoneRotation:
 
     def get_blender_compatible_euler(self):
         """""" # TODO
-
-    #def get_blender_compatible_quat(self):
-    #    src = mathutils.Quaternion(self.raw_wxyz).to_matrix().to_4x4()
-    #    return correct_bone_axis(src).to_quaternion()
-#
-    #def get_blender_compatible_quat_tuple(self):
-    #    q = self.get_blender_compatible_quat()
-    #    return q.w, q.x, q.y, q.z
-#
-    #def BlenderQuaternionToRsqRotation(blender_quaternion: mathutils.Quaternion):
-    #    R_src = blender_quaternion.to_matrix().to_4x4()
-    #    #R_raw = BoneAxisCorrectionInv(R_src)
-    #    return R_src.to_quaternion()
 
     def PtrSetRotation(self, rsq):
         quat = _GetValueFromRotationFrameC(rsq)
@@ -214,9 +199,6 @@ class AnimBoneData:
         self.translation.blender = translation
         self.rotation.raw_wxyz = rotation.wxyz
         self.scale.blender = scale
-
-        # id
-        #self.index = rig_name_id_mapping[self.bone_name]
 
     def AddDataToBlockPtr(self, frame_idx, anim_block_ptr):
         # SQS
