@@ -15,9 +15,9 @@ def LoadAnim(armature_obj, frame_num, frame_bones_list):
         else:
             pose_bone = pose_bones.get(frame_bone.bone_name)
 
-        SetAnimationBoneMatrix(armature_obj, frame_bone, pose_bone, frame_num)
+        SetAnimationBoneMatrix(frame_bone, pose_bone, frame_num)
 
-def SetAnimationBoneMatrix(armature, frame_bone, pose_bone, frame_num):
+def SetAnimationBoneMatrix(frame_bone, pose_bone, frame_num):
     pose_bone.rotation_mode = 'QUATERNION'
 
     rotate = False
@@ -42,68 +42,24 @@ def SetAnimationBoneMatrix(armature, frame_bone, pose_bone, frame_num):
         rotate = True
         r = mathutils.Quaternion(frame_bone.rotation.raw_wxyz).to_matrix().to_4x4()
 
-    print(t.translation)
-    print(r.to_euler())
-    print(s)
+    mat = t @ r @ s # animation-delta matrix (without premultiplied armature bone data)
+    mat = mat
 
-    r = r.to_euler()
-    r_temp = r.copy()
+    local_bone_mat = pose_bone.bone.matrix.to_4x4() # local bone matrix in armature space
+    local_bone_mat_uncorr = inv_correct_bone_axis(local_bone_mat) # uncorrected
 
-    r.x = -r_temp.y
-    r.y = -r_temp.x
-    r.z = -r_temp.z
+    local_bone_mat_infl = local_bone_mat_uncorr @ mat # influenced with anim
+    local_bone_mat_infl_corr = bone_axis_correction_full @ local_bone_mat_infl @ bone_axis_correction_inv # influenced and corrected
+    local_bone_mat_delta = local_bone_mat.inverted() @ local_bone_mat_infl_corr # delta (bone mat vs anim bone corr)
+    local_bone_mat_delta = local_bone_mat_delta
 
-    r = r.to_matrix().to_4x4()
-
-
-    mat = t @ r @ s
-    #mat = armature.convert_space(
-    #    pose_bone=pose_bone,
-    #    matrix=mat,
-    #    from_space="POSE",
-    #    to_space="LOCAL"
-    #).to_3x3()
-   # mat = mat.to_3x3()
-    # Y = up
-
-    #mat = mat @ mathutils.Matrix.Rotation(math.radians(-180), 3, 'Y')
-    #mat = mathutils.Matrix.Rotation(math.radians(-90), 4, 'Y') @ mat
-    #mat = mathutils.Matrix.Rotation(math.radians(90), 4, 'Z') @ mat
-    #mat = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X') @ mat
-    #mat.rotate(mathutils.Matrix.Rotation(math.radians(180), 3, 'Y'))
-    #mat.rotate(mathutils.Matrix.Rotation(math.radians(-90), 3, 'Y'))
-    #mat = mat.to_4x4() @ bone_axis_correction_full_inv
-    #.rotate(mathutils.Matrix.Rotation(math.radians(180), 3, 'Y'))
-    #mat.rotate(mathutils.Matrix.Rotation(math.radians(-90), 3, 'X'))
-    #mat = correct_bone_axis(mat.to_4x4()).to_3x3()
-    #mat.rotate(mathutils.Matrix.Rotation(math.radians(90), 3, 'X'))
-    #mat.rotate(mathutils.Matrix.Rotation(math.radians(-90.0), 3, 'Y'))
-    #mat.rotate(mathutils.Matrix.Rotation(math.radians(180.0), 3, 'Z'))
-    #mat = mat.to_4x4()
-    #mat = armature.convert_space(
-    #    pose_bone=pose_bone,
-    #    matrix=mat,
-    #    from_space="LOCAL",
-    #    to_space="POSE"
-    #)
-
-    #mat = armature.convert_space(
-    #    pose_bone=pose_bone,
-    #    matrix=mat,
-    #    from_space="WORLD",
-    #    to_space="POSE"
-    #)
-
-    t, r, s = mat.decompose()
+    pose_bone.matrix_basis = local_bone_mat_delta
 
     if scale:
-        pose_bone.scale = list(s.to_scale())
         pose_bone.keyframe_insert(data_path='scale', frame=frame_num)
 
     if translate:
-        pose_bone.location = t
         pose_bone.keyframe_insert(data_path='location', frame=frame_num)
 
     if rotate:
-        pose_bone.rotation_quaternion = r
         pose_bone.keyframe_insert(data_path='rotation_quaternion', frame=frame_num)
