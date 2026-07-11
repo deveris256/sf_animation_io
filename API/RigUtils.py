@@ -3,8 +3,6 @@ import shutil
 
 import mathutils
 
-from API.AnimationUtils import BoneAxisCorrection_Alt, BoneAxisCorrectionInv, BoneAxisCorrection
-
 def GetRigByName(name):
     path = os.path.join(GetRigFolder(), f"{name}.rig")
     if not os.path.isfile(path):
@@ -72,8 +70,7 @@ def RecursiveCreateRig(obj, rig_data, current_list=[]):
 
 def RigPostProcess(obj):
     """Expects edit mode."""
-    for edit_bone in obj.data.edit_bones:
-        edit_bone.matrix = BoneAxisCorrection_Alt(edit_bone.matrix)
+    pass
 
 def RigSetBoneAttr(rig, obj):
     """Expects edit mode."""

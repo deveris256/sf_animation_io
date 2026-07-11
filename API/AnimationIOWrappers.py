@@ -321,54 +321,6 @@ class SkelRig():
             bone.LoadBoneFromArmature(armature_obj.data.edit_bones.get(b.name))
             self.bones.append(bone)
 
-        # Post-process
-
-        RevertRigCorrectBones(self.bones, armature_obj, [self.bones[0]])
-
-def RevertRigCorrectBones(rig_bones, armature_obj, bones, parent_world_mat=None):
-    if not bones:
-        return
-
-    for rig_bone in bones:
-        bone = armature_obj.data.bones.get(rig_bone.bone_name)
-        world_mat = bone.matrix_local.copy()
-        world_mat = (
-                world_mat @
-                AnimationUtils.bone_axis_correction_full
-        )
-
-        world_mat = (
-                AnimationUtils.bone_axis_correction_full @
-                world_mat @
-                AnimationUtils.bone_axis_correction_inv
-        )
-        if parent_world_mat is not None:
-            local_mat = parent_world_mat.inverted() @ world_mat
-        else:
-            local_mat = world_mat
-
-        loc, rot, sca = local_mat.decompose()
-
-        rot = rot.normalized()
-
-        rig_bone.translation = loc
-        rig_bone.rotation.x = rot.x
-        rig_bone.rotation.y = rot.y
-        rig_bone.rotation.z = rot.z
-        rig_bone.rotation.w = rot.w
-
-        next_bones = [b for b in rig_bones if b.parent_name == rig_bone.bone_name]
-
-        if len(next_bones) == 0:
-            continue
-
-        RevertRigCorrectBones(
-            rig_bones,
-            armature_obj,
-            next_bones,
-            world_mat
-        )
-
 
 class AnimFrameData():
     def __init__(self):

@@ -1,21 +1,6 @@
 import math
 import mathutils
 
-bone_axis_correction = mathutils.Matrix.Rotation(math.radians(90.0), 4, 'Z')
-bone_axis_correction_inv = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
-
-bone_axis_correction_full = mathutils.Matrix.Rotation(math.radians(180.0), 4, 'Z')
-bone_axis_correction_full_inv = mathutils.Matrix.Rotation(math.radians(-180.0), 4, 'Z')
-
-def BoneAxisCorrection(T):
-    return bone_axis_correction @ T @ bone_axis_correction_inv
-
-def BoneAxisCorrectionInv(T):
-    return bone_axis_correction_inv @ T @ bone_axis_correction
-
-def BoneAxisCorrection_Alt(T):
-    return (bone_axis_correction_full @ T @ bone_axis_correction_inv)
-
 def LoadAnim(armature_obj, frame_num, frame_bones_list):
     pose_bones = armature_obj.pose.bones
 

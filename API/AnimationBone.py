@@ -7,7 +7,6 @@ from API.AnimConverterFunc import _CreateScalarEntryC, _AddScalarSqToAnimBlockC,
     _GetTranslationFromSqC, _GetVector3DX, _GetVector3DZ, _GetVector3DY, _GetValueFromTranslationEntryC, \
     _GetValueFromScalarEntryC, _GetValueFromRotationEntryC, _GetQuaternionX, _GetQuaternionY, _GetQuaternionW, \
     _GetQuaternionZ
-from API.AnimationUtils import BoneAxisCorrection, BoneAxisCorrectionInv
 
 class AnimationBoneScale:
     """
@@ -98,14 +97,10 @@ class AnimationBoneRotation:
         return rot.x, rot.y, rot.z
 
     def RsqRotationToBlenderQuaternion(raw_quaternion: tuple[float, float, float, float]):
-        R_src = mathutils.Quaternion(raw_quaternion).to_matrix().to_4x4()
-        R_bpy = BoneAxisCorrection(R_src)
-        return R_bpy.to_quaternion()
+        return mathutils.Quaternion(raw_quaternion)
 
     def BlenderQuaternionToRsqRotation(blender_quaternion: mathutils.Quaternion):
-        R_src = blender_quaternion.to_matrix().to_4x4()
-        R_raw = BoneAxisCorrectionInv(R_src)
-        return R_raw.to_quaternion()
+        return blender_quaternion
 
     def PtrSetRotation(self, rsq):
         quat = _GetValueFromRotationEntryC(rsq)
@@ -144,15 +139,12 @@ class AnimationBoneTranslation:
 
     @property
     def blender(self):
-        x = -self.y
-        y = self.x
-        z = self.z
-        return x, y, z
+        return self.x, self.y, self.z
 
     @blender.setter
     def blender(self, value):
-        self.x = value[1]
-        self.y = -value[0]
+        self.x = value[0]
+        self.y = value[1]
         self.z = value[2]
 
     def PtrSetTranslation(self, tsq):
