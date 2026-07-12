@@ -201,7 +201,7 @@ class RigBone():
         if not err:
             print("ERROR LOADING BONE FROM RIG", err)
 
-    def LoadBoneFromArmature(self, edit_bone, index=-1):
+    def LoadBoneFromArmature(self, armature_obj, edit_bone, index=-1):
         self.bone_name = edit_bone.name
         self.parent_name = edit_bone.parent.name if edit_bone.parent != None else None
         self.parent_index = edit_bone.parent.sf_bone_props.index if edit_bone.parent != None else -1
@@ -211,6 +211,13 @@ class RigBone():
         self.index = index  # TODO
 
         self.LoadArmatureBoneAttributes(edit_bone)
+        if edit_bone.parent:
+            mat = edit_bone.parent.matrix.inverted() @ edit_bone.matrix
+        else:
+            mat = edit_bone.matrix
+        tra, rot, _ = mat.decompose()
+        self.translation = (tra.x, tra.y, tra.z)
+        self.rotation = RigBoneRotation((rot.x, rot.y, rot.z, rot.w))
 
 class RigBoneRotation:
     def __init__(self, rotation_xyzw=None):
@@ -318,7 +325,7 @@ class SkelRig():
 
         for b in bones:
             bone = RigBone()
-            bone.LoadBoneFromArmature(armature_obj.data.edit_bones.get(b.name))
+            bone.LoadBoneFromArmature(armature_obj, armature_obj.data.edit_bones.get(b.name))
             self.bones.append(bone)
 
 
