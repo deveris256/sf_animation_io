@@ -30,9 +30,9 @@ class RigPrecision:
     rig_precision_inv = {v: k for k, v in rig_precision.items()}
 
     def __init__(self, val):
-        self.set_precision(val)
         self._custom_rig_precision = 0.03125
         self._precision = 0
+        self.set_precision(val)
 
     def set_precision(self, val, custom=None):
         if isinstance(val, str):
