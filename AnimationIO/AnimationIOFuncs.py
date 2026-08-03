@@ -796,7 +796,7 @@ _CreateAnimationC.restype = ctypes.c_void_p # CALUMI::UNIV::Animation *
 
 _CreateAnimationC.argtypes = [
 ctypes.c_char_p,
-ctypes.c_void_p, # unsigned int
+ctypes.c_uint, # unsigned int
 ]
 
 _GetAnimationBlockC = _anim_dll.GetAnimationBlockC

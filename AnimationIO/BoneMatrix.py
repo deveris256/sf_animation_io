@@ -52,6 +52,12 @@ class BoneMatrix:
         self._overlay_matrices[frame_id] = overlay_mat
         self._overlay_matrices_mask[frame_id] = mask
 
+    def set_overlay_matrix_from_blender(self, frame_id, overlay_matrix, mask):
+        frame_id = int(frame_id)
+        overlay_mat = matrix_construct_helper(overlay_matrix)
+        self._overlay_matrices[frame_id] = bone_axis_correction_m90.to_4x4() @ overlay_mat @ bone_axis_correction_90.to_4x4()
+        self._overlay_matrices_mask[frame_id] = mask
+
     def get_overlay_matrix_or_identity(self, frame_id):
         frame_id = int(frame_id)
         if frame_id in self._overlay_matrices.keys():

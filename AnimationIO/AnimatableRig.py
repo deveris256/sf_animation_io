@@ -16,9 +16,14 @@ from AnimationIO.AnimationIOFuncs import (
     _SetGlobalSkeletonBoneRotationC, _SetLocalSkeletonBoneRotationC, _UNIVMirrorRigPackage_AddPackageToSkeletonRigC,
     _SetGlobalSkeletonBonePositionC, _UNIVManifestRigPackage_AddPackageToSkeletonRigC,
     _UNIVManifestRigPackage_InsertBoneC, _UNIVManifestRigPackage_AddBoneC,
+    _SaveAnimationSceneToSFBGSFormatUsingRigReferencePathOverrideC, _CreateAnimationSceneC,
+    _SFBGSAnimationPackage_AddPackageToAnimationC, _CreateAnimationC, _CreateAnimBlockC, _CreateTranslationFrameC,
+    _AddTranslationSqToAnimBlockC, _AddAnimBlockToAnimationC, _SaveAnimationToSFBGSFormatWithExistingRigDirectC,
+    _CreateRotationFrameC, _AddRotationSqToAnimBlockC, _CreateScalarFrameC, _AddScalarSqToAnimBlockC,
 )
 from AnimationIO.AnimatedBone import AnimatedBone
-from CommonUtils import ensure_object_mode, ensure_bl_mode_on_obj
+from CommonUtils import ensure_object_mode, ensure_bl_mode_on_obj, to_ctypes_array
+
 
 class RigPrecision:
     rig_precision = {
@@ -142,6 +147,23 @@ class AnimatableRig:
             bone.from_blender(edit_bone)
             self.bones.append(bone)
 
+        if self.has_animation:
+            import bpy
+            ensure_bl_mode_on_obj("POSE", rig_obj)
+
+            action = bpy.context.object.animation_data.action
+            max_keyframe_idx = int(action.frame_range[1])
+
+            for frame_id in range(max_keyframe_idx):
+                bpy.context.scene.frame_set(frame_id)
+
+                depsgraph = bpy.context.evaluated_depsgraph_get()
+                depsgraph.update()
+                rig_obj = rig_obj.evaluated_get(depsgraph)
+
+                for pose_bone in rig_obj.pose.bones:
+                    bone = [b for b in self.bones if b.name == pose_bone.name][0]
+                    bone.from_anim_pose_bone(pose_bone, frame_id)
         ensure_object_mode()
 
     def rig_to_blender(self, armature_obj):
@@ -225,6 +247,56 @@ class AnimatableRig:
 
         return rig_ptr
 
+    def anim_to_ptr(self):
+        anim_ptr = _CreateAnimationC("test".encode('utf-8'), len(self.bones))
+        _SFBGSAnimationPackage_AddPackageToAnimationC(anim_ptr, True)
+
+        for bone in self.bones:
+            anim_block = _CreateAnimBlockC(bone.name.encode('utf-8'))
+            for frame_id, mat in bone.matrix._overlay_matrices.items():
+                tra, rot, sca = mat.decompose()
+                print(bone.name, frame_id, rot)
+                sca = sca[0]
+
+                # translation
+                translation_frame = _CreateTranslationFrameC(
+                    frame_id,
+                    tra.x, tra.y, tra.z
+                )
+                _AddTranslationSqToAnimBlockC(
+                    anim_block,
+                    translation_frame,
+                    1,
+                    False
+                )
+
+                # rotation
+                rotation_frame = _CreateRotationFrameC(
+                    frame_id,
+                    rot.x, rot.y, rot.z, rot.w
+                )
+                _AddRotationSqToAnimBlockC(
+                    anim_block,
+                    rotation_frame,
+                    1,
+                    False
+                )
+
+                # scale
+                scale_frame = _CreateScalarFrameC(
+                    frame_id,
+                    sca
+                )
+                _AddScalarSqToAnimBlockC(
+                    anim_block,
+                    scale_frame,
+                    1,
+                    False
+                )
+            _AddAnimBlockToAnimationC(anim_ptr, anim_block, True)
+
+        return anim_ptr
+
 
 def get_rig_ptr_and_rig(rig_path):
     rig = AnimatableRig()
@@ -304,3 +376,16 @@ def bl_import_anim_from_path(anim_path, rig, rig_path, rig_bl_obj):
     rig.anim_from_ptr(anim_scene)
     ensure_bl_mode_on_obj("POSE", rig_bl_obj)
     rig.anim_to_blender(rig_bl_obj)
+
+def bl_export_anim(export_path, rig_obj, rig_path):
+    ensure_object_mode()
+    animatable = AnimatableRig()
+    animatable.has_animation = True
+    animatable.from_blender(rig_obj)
+    anim_ptr = animatable.anim_to_ptr()
+    _SaveAnimationToSFBGSFormatWithExistingRigDirectC(
+        anim_ptr,
+        export_path,
+        rig_path
+    )
+

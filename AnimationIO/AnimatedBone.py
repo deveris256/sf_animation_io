@@ -171,6 +171,11 @@ class AnimatedBone:
         self.matrix.blender_compatible_bone_world_matrix = edit_bone.matrix
         self.get_rig_bone_attr(edit_bone)
 
+    def from_anim_pose_bone(self, pose_bone, frame_id):
+        import bpy
+
+        self.matrix.set_overlay_matrix_from_blender(frame_id, pose_bone.matrix_basis, [True, True, True])
+
     def provide_anim_to_pose_bone(self, pose_bone, max_keyframe_idx):
         """Adds animation to Blender pose bone"""
         for frame_id in range(max_keyframe_idx):

@@ -42,6 +42,7 @@ if CommonUtils.get_blender_version()[0] != 5:
         RigExportOP,
         AnimationProps,
         AnimationImportOP,
+        AnimationExportOP,
 
         AnimationIOPanels, # last
     )
@@ -52,6 +53,7 @@ if CommonUtils.get_blender_version()[0] != 5:
     imp.reload(RigExportOP)
     imp.reload(AnimationProps)
     imp.reload(AnimationImportOP)
+    imp.reload(AnimationExportOP)
     imp.reload(AnimationIOPanels)
 
 __modules__ = [
@@ -61,6 +63,7 @@ __modules__ = [
     RigExportOP,
     AnimationProps,
     AnimationImportOP,
+    AnimationExportOP,
     AnimationIOPanels,
 ]
 
