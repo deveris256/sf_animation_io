@@ -1,50 +1,7 @@
-import bpy
-import os
-import sys
-
-dir = os.path.dirname(os.path.realpath(__file__))
-if dir not in sys.path:
-    sys.path.append(dir)
-
-import CommonUtils
-import AnimationOperators
-import RigOperators
-
-if CommonUtils.GetBlenderVersion()[0] != 5:
-    # Modules
-    import imp
-    from API import (
-        BlenderSpecificUtils,
-        AnimConverterFunc,
-        AnimConverter,
-        AnimFrameData,
-        RigBone,
-        RigUtils,
-        SkeletonRig,
-        AnimationUtils,
-        AnimationBone,
-        AnimationScene,
-        Animation,
-    )
-    imp.reload(BlenderSpecificUtils)
-    imp.reload(AnimConverterFunc)
-    imp.reload(AnimationScene)
-    imp.reload(SkeletonRig)
-    imp.reload(AnimConverter)
-    imp.reload(CommonUtils)
-    imp.reload(AnimationUtils)
-    imp.reload(RigUtils)
-    imp.reload(AnimFrameData)
-    imp.reload(RigBone)
-    imp.reload(Animation)
-    imp.reload(AnimationBone)
-    imp.reload(AnimationOperators)
-    imp.reload(RigOperators)
-
 bl_info = {
     "name": "Starfield Animation",
     "author": "Deveris, Calaverah & Jojo",
-    "version": (1, 0, 0),
+    "version": (2, 0, 0),
     "blender": (4, 3, 0),
     "location": "File > Import-Export",
     "description": "Export & Import Starfield .af & .rig",
@@ -52,9 +9,59 @@ bl_info = {
     "category": "Import-Export",
 }
 
+import sys
+import os
+
+dir = os.path.dirname(os.path.realpath(__file__))
+if dir not in sys.path:
+    sys.path.append(dir)
+
+import CommonUtils #0
+
+if CommonUtils.get_blender_version()[0] != 5:
+    # Modules
+    import imp
+    from AnimationIO import (
+        AnimationIOFuncs,  #0
+        BoneMatrix, #0
+        AnimatedBone, #1
+        AnimatableRig, #2
+    )
+
+    imp.reload(CommonUtils)
+
+    imp.reload(AnimationIOFuncs)
+    imp.reload(BoneMatrix)
+    imp.reload(AnimatedBone)
+    imp.reload(AnimatableRig)
+
+    from AnimationIO_bl import (
+        RegisteredRigOP,
+        RigProps,
+        RigImportOP,
+        RigExportOP,
+        AnimationProps,
+        AnimationImportOP,
+
+        AnimationIOPanels, # last
+    )
+
+    imp.reload(RegisteredRigOP)
+    imp.reload(RigProps)
+    imp.reload(RigImportOP)
+    imp.reload(RigExportOP)
+    imp.reload(AnimationProps)
+    imp.reload(AnimationImportOP)
+    imp.reload(AnimationIOPanels)
+
 __modules__ = [
-    AnimationOperators,
-    RigOperators
+    RegisteredRigOP,
+    RigProps,
+    RigImportOP,
+    RigExportOP,
+    AnimationProps,
+    AnimationImportOP,
+    AnimationIOPanels,
 ]
 
 # Register the operators and menu entries
