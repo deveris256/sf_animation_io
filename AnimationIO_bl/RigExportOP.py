@@ -4,7 +4,7 @@ import bpy
 import os
 
 from AnimationIO.AnimatableRig import bl_import_rig_from_path, bl_export_rig_from_path
-from CommonUtils import rig_list_existing_bone_order_json_enum_items, get_existing_bone_order_json, get_bone_order
+from CommonUtils import rig_list_existing_bone_order_json_enum_items, get_bone_order
 
 
 class ExportCustomRig(bpy.types.Operator):

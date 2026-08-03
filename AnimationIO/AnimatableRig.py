@@ -22,7 +22,7 @@ from AnimationIO.AnimationIOFuncs import (
     _CreateRotationFrameC, _AddRotationSqToAnimBlockC, _CreateScalarFrameC, _AddScalarSqToAnimBlockC,
 )
 from AnimationIO.AnimatedBone import AnimatedBone
-from CommonUtils import ensure_object_mode, ensure_bl_mode_on_obj, to_ctypes_array
+from CommonUtils import ensure_object_mode, ensure_bl_mode_on_obj
 
 
 class RigPrecision:

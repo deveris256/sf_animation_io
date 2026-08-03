@@ -77,7 +77,6 @@ class OBJECT_PT_SF_AnimationManagementPanel_BoneMode(bpy.types.Panel):
                 #"mirror_name": ["Mirror", ObjGetBoneNameByIndex, {"obj": obj}, None],
                 "lod_value": ["LOD", None, {}, None],
                 "bone_type": ["Type", None, {}, None],
-                "do_correct_bone": ["Correct bone", None, {}, None],
             }, space_for_icons=False)
 
 class OBJECT_PT_SF_AnimationManagementPanel_BoneMapMode(bpy.types.Panel):

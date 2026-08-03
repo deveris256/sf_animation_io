@@ -3,7 +3,6 @@ import bpy
 class SfRigBoneProperties(bpy.types.PropertyGroup):
     twist_bone_driver_name: bpy.props.StringProperty(name="Driver Name", default="INVALID")
     twist_bone_driver_weight: bpy.props.FloatProperty(name="Driver weight", default=0.0, min=0.0, soft_max=1.0)
-    do_correct_bone: bpy.props.BoolProperty(name="Correct bone axes", default=False, description="On export, AnimationIO corrects bone axes with if the checkmark is on. If you're experiencing axis-related problem, uncheck it on specific bones.")
     bone_type: bpy.props.EnumProperty(
         name="Bone type",
         default="Default",

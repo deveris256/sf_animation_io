@@ -155,8 +155,6 @@ class AnimatedBone:
 
         blender_bone.matrix = self.matrix.blender_compatible_bone_world_matrix
 
-        blender_bone.sf_bone_props.do_correct_bone = True
-
         self.set_rig_bone_attr(blender_bone)
 
         # to test correction
