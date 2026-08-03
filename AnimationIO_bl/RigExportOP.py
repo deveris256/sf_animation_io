@@ -1,7 +1,10 @@
+import json
+
 import bpy
 import os
 
 from AnimationIO.AnimatableRig import bl_import_rig_from_path, bl_export_rig_from_path
+from CommonUtils import rig_list_existing_bone_order_json_enum_items, get_existing_bone_order_json, get_bone_order
 
 
 class ExportCustomRig(bpy.types.Operator):
@@ -14,8 +17,15 @@ class ExportCustomRig(bpy.types.Operator):
     filename: bpy.props.StringProperty(default='untitled.rig')
     filter_glob: bpy.props.StringProperty(default="*.rig", options={'HIDDEN'})
 
+    selected_bone_order: bpy.props.EnumProperty(name="Bone order", items=rig_list_existing_bone_order_json_enum_items)
+
     def validate(self):
         pass # todo move validation logic here.
+
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        box.prop(self, "selected_bone_order")
 
     def execute(self, context):
         if not self.filepath.lower().endswith(".rig"):
@@ -26,7 +36,13 @@ class ExportCustomRig(bpy.types.Operator):
             self.report({'ERROR'}, f"Please select an armature")
             return {'CANCELLED'}
 
-        bl_export_rig_from_path(rig, self.filepath)
+        bone_order_file = get_bone_order(self.selected_bone_order)
+        bone_order = None
+        if bone_order_file is not None and os.path.isfile(bone_order_file):
+            bone_order = [b.strip() for b in open(bone_order_file).readlines() if b.strip() is not None]
+            print(f"Loaded bone order: {bone_order}")
+
+        bl_export_rig_from_path(rig, self.filepath, bone_order=bone_order)
 
         return {'FINISHED'}
 

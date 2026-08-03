@@ -1530,7 +1530,7 @@ _UNIVManifestRigPackage_InsertBoneC.restype = ctypes.c_int
 _UNIVManifestRigPackage_InsertBoneC.argtypes = [
 ctypes.c_void_p, # const CALUMI::UNIV::SkeletonRig *
 ctypes.c_char_p,
-ctypes.c_void_p, # unsigned int
+ctypes.c_uint, # unsigned int
 ]
 
 _UNIVManifestRigPackage_RemoveBoneC = _anim_dll.UNIVManifestRigPackage_RemoveBoneC

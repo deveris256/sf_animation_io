@@ -137,12 +137,26 @@ def GetRigReferenceObject(name):
         return None
     return path
 
+def get_bone_order(name):
+    path = os.path.join(GetRigFolder(), f"{name}.boneorder.txt")
+    if not os.path.isfile(path):
+        return None
+    return path
+
 def GetRigFolder():
     rig_folder = os.path.join(os.path.dirname(__file__), "Assets", "Rigs")
     if not os.path.isdir(rig_folder):
         os.makedirs(rig_folder)
 
     return rig_folder
+
+def get_existing_bone_order_name():
+    names = []
+    with os.scandir(GetRigFolder()) as entries:
+        for entry in entries:
+            if not entry.name.lower().endswith(".boneorder.txt"): continue
+            names.append(entry.name[:-14])
+    return names
 
 def GetExistingRigs():
     names = []
@@ -156,6 +170,11 @@ def rig_list_enum_items(self, context):
     items = [(rig_name, rig_name, "") for rig_name in GetExistingRigs()]
     if len(items) == 0:
         items.append(("NONE", "NONE", "NO RIGS FOUND"))
+    return items
+
+def rig_list_existing_bone_order_json_enum_items(self, context):
+    items = [(rig_name, rig_name, "") for rig_name in get_existing_bone_order_name()]
+    items.insert(0, ("No preference", "No preference", "Set as no preferred bone order"))
     return items
 
 def gstr(strings):

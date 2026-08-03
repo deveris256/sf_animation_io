@@ -14,7 +14,8 @@ from AnimationIO.AnimationIOFuncs import (
     _SFBGSRigPackage_IsMannequinC, _SFBGSRigPackage_SetMannequinC, _SFBGSRigPackage_SetPrecisionToDefaultC,
     _SFBGSRigPackage_SetPrecisionToShipValuesC, _SFBGSRigPackage_SetPrecisionToFirstPersonC, _RenameBoneC,
     _SetGlobalSkeletonBoneRotationC, _SetLocalSkeletonBoneRotationC, _UNIVMirrorRigPackage_AddPackageToSkeletonRigC,
-    _SetGlobalSkeletonBonePositionC,
+    _SetGlobalSkeletonBonePositionC, _UNIVManifestRigPackage_AddPackageToSkeletonRigC,
+    _UNIVManifestRigPackage_InsertBoneC, _UNIVManifestRigPackage_AddBoneC,
 )
 from AnimationIO.AnimatedBone import AnimatedBone
 from CommonUtils import ensure_object_mode, ensure_bl_mode_on_obj
@@ -198,8 +199,13 @@ class AnimatableRig:
             pose_bone = armature_obj.pose.bones.get(bone.name)
             bone.provide_anim_to_pose_bone(pose_bone, max_keyframe_idx)
 
-    def rig_to_ptr(self):
+    def rig_to_ptr(self, bone_order=None):
         rig_ptr = _CreateSkeletonRigC("skeleton".encode('utf-8'))
+
+        if bone_order is not None:
+            _UNIVManifestRigPackage_AddPackageToSkeletonRigC(rig_ptr, True)
+            for bone_name in bone_order:
+                _UNIVManifestRigPackage_AddBoneC(rig_ptr, bone_name.encode('utf-8'))
 
         _SFBGSRigPackage_AddPackageToSkeletonRigC(rig_ptr, True)
         _UNIVMirrorRigPackage_AddPackageToSkeletonRigC(rig_ptr, True)
@@ -275,11 +281,11 @@ def _add_bones_recursive(rig, rig_ptr, parent_bone_ptr, child_bones):
         if len(new_child_bones) != 0:
             _add_bones_recursive(rig, rig_ptr, bone_ptr, new_child_bones)
 
-def bl_export_rig_from_path(rig_obj, rig_path):
+def bl_export_rig_from_path(rig_obj, rig_path, bone_order=None):
     rig = AnimatableRig()
     rig.from_blender(rig_obj)
 
-    rig_ptr = rig.rig_to_ptr()
+    rig_ptr = rig.rig_to_ptr(bone_order)
 
     _SaveSkeletonRigToSFBGSFormatDirectC(rig_ptr, ctypes.c_wchar_p(rig_path))
 
