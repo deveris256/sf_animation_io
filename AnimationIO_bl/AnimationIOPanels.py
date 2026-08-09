@@ -1,6 +1,6 @@
 import bpy
 
-from CommonUtils import gen_pretty_prop_table, gen_description_box, gen_pretty_prop_table_with_label
+from CommonUtilsAnimIO import gen_pretty_prop_table, gen_description_box, gen_pretty_prop_table_with_label
 
 
 class OBJECT_PT_SF_AnimationManagementPanel(bpy.types.Panel):

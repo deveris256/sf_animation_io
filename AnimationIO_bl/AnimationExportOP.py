@@ -4,7 +4,7 @@ import bpy
 import bpy_extras.io_utils
 
 from AnimationIO.AnimatableRig import bl_export_anim
-from CommonUtils import rig_list_enum_items, GetRigByName
+from CommonUtilsAnimIO import rig_list_enum_items, GetRigByName
 
 
 class ExportCustomAnimation(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):

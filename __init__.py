@@ -16,9 +16,9 @@ dir = os.path.dirname(os.path.realpath(__file__))
 if dir not in sys.path:
     sys.path.append(dir)
 
-import CommonUtils #0
+import CommonUtilsAnimIO #0
 
-if CommonUtils.get_blender_version()[0] != 5:
+if CommonUtilsAnimIO.get_blender_version()[0] != 5:
     # Modules
     import imp
     from AnimationIO import (
@@ -28,7 +28,7 @@ if CommonUtils.get_blender_version()[0] != 5:
         AnimatableRig, #2
     )
 
-    imp.reload(CommonUtils)
+    imp.reload(CommonUtilsAnimIO)
 
     imp.reload(AnimationIOFuncs)
     imp.reload(BoneMatrix)

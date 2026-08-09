@@ -3,7 +3,7 @@ import math
 import bpy
 from mathutils import Matrix
 
-from CommonUtils import (
+from CommonUtilsAnimIO import (
     ensure_object_mode)
 
 class RigToNodes(bpy.types.Operator):

@@ -4,7 +4,7 @@ import bpy
 from enum import Enum
 
 from AnimationIO.AnimatableRig import get_rig_ptr_and_rig, create_rig_armature, bl_import_anim_from_path
-from CommonUtils import gen_description_box, GetRigByName, GetRigReferenceObject, ensure_object_mode, \
+from CommonUtilsAnimIO import gen_description_box, GetRigByName, GetRigReferenceObject, ensure_object_mode, \
     deselect_all_objects, ensure_bl_mode_on_obj, rig_list_enum_items, gstr, worked, spawn_error, set_object_armature
 
 strings = {

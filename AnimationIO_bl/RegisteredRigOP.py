@@ -3,7 +3,7 @@ import os
 import shutil
 
 from AnimationIO import AnimatableRig
-from CommonUtils import (
+from CommonUtilsAnimIO import (
     GetRigFolder,
     prepare_file_name, gen_description_box, ensure_object_mode, ensure_bl_mode_on_obj)
 
