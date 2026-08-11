@@ -18,6 +18,19 @@ if dir not in sys.path:
 
 import CommonUtilsAnimIO #0
 
+from AnimationIO_bl import (
+    RegisteredRigOP,
+    RigProps,
+    RigImportOP,
+    RigExportOP,
+    AnimationProps,
+    AnimationImportOP,
+    AnimationExportOP,
+    RigToEmptiesOP,
+
+    AnimationIOPanels, # last
+)
+
 if CommonUtilsAnimIO.get_blender_version()[0] != 5:
     # Modules
     import imp
@@ -35,18 +48,7 @@ if CommonUtilsAnimIO.get_blender_version()[0] != 5:
     imp.reload(AnimatedBone)
     imp.reload(AnimatableRig)
 
-    from AnimationIO_bl import (
-        RegisteredRigOP,
-        RigProps,
-        RigImportOP,
-        RigExportOP,
-        AnimationProps,
-        AnimationImportOP,
-        AnimationExportOP,
-        RigToEmptiesOP,
-
-        AnimationIOPanels, # last
-    )
+    
 
     imp.reload(RegisteredRigOP)
     imp.reload(RigProps)
