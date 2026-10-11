@@ -1,6 +1,6 @@
-from API.AnimationIOWrappers import AnimFrameData
+from .AnimationIOWrappers import AnimFrameData
 import bpy
-import CommonUtils
+from .. import CommonUtils
 
 class AnimData():
     def __init__(self):

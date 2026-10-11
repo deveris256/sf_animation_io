@@ -1,9 +1,9 @@
 import bpy
 import os
 import textwrap
-from API import AnimConverter, RigUtils
-from API.RigUtils import rig_list_enum_items, GetRigFolder
-from CommonUtils import PrepareFileName, GenDescriptionBox
+from .API import AnimConverter, RigUtils
+from .API.RigUtils import rig_list_enum_items, GetRigFolder
+from .CommonUtils import PrepareFileName, GenDescriptionBox
 
 strings = {
     "rig_name": \

@@ -1,19 +1,13 @@
 import bpy
-import os
-import sys
 
-dir = os.path.dirname(os.path.realpath(__file__))
-if dir not in sys.path:
-    sys.path.append(dir)
-
-import CommonUtils
-import AnimationOperators
-import RigOperators
+from . import CommonUtils
+from . import AnimationOperators
+from . import RigOperators
 
 if CommonUtils.GetBlenderVersion()[0] != 5:
     # Modules
-    import imp
-    from API import (
+    import importlib
+    from .API import (
         AnimConverterFunc,
         AnimConverter,
         AnimationIOWrappers,
@@ -24,23 +18,23 @@ if CommonUtils.GetBlenderVersion()[0] != 5:
         Animation
     )
 
-    imp.reload(CommonUtils)
-    imp.reload(AnimationUtils)
-    imp.reload(RigUtils)
-    imp.reload(AnimConverterFunc)
-    imp.reload(AnimationIOWrappers)
-    imp.reload(Animation)
-    imp.reload(AnimationScene)
-    imp.reload(AnimationBone)
-    imp.reload(AnimConverter)
-    imp.reload(AnimationOperators)
+    importlib.reload(CommonUtils)
+    importlib.reload(AnimationUtils)
+    importlib.reload(RigUtils)
+    importlib.reload(AnimConverterFunc)
+    importlib.reload(AnimationIOWrappers)
+    importlib.reload(Animation)
+    importlib.reload(AnimationScene)
+    importlib.reload(AnimationBone)
+    importlib.reload(AnimConverter)
+    importlib.reload(AnimationOperators)
 
-    imp.reload(RigOperators)
+    importlib.reload(RigOperators)
 
 bl_info = {
     "name": "Starfield Animation",
     "author": "Deveris, Calaverah & Jojo",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (4, 3, 0),
     "location": "File > Import-Export",
     "description": "Export & Import Starfield .af & .rig",

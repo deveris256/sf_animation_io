@@ -3,10 +3,10 @@ import textwrap
 
 import bpy
 
-from API import AnimConverter
-from API.AnimationUtils import LoadAnim
-from CommonUtils import GenDescriptionBox, PrepareFileName, GenPrettyPropTable, GenPrettyPropTableWithLabel
-from API.RigUtils import (
+from .API import AnimConverter
+from .API.AnimationUtils import LoadAnim
+from .CommonUtils import GenDescriptionBox, PrepareFileName, GenPrettyPropTable, GenPrettyPropTableWithLabel
+from .API.RigUtils import (
     rig_list_enum_items,
     GetRigByName, RecursiveCreateRig, RigPostProcess, RigSetBoneAttr, GetRigReferenceObject)
 
@@ -203,7 +203,7 @@ class ImportCustomAnimation(bpy.types.Operator):
                 clone.name = anim_data.name + "_reference"
 
                 SetObjectArmature(
-                    filepath[0][:-3],
+                    os.path.splitext(file.name)[0],
                     clone.name,
                     armature_obj
                 )
@@ -216,7 +216,7 @@ class ImportCustomAnimation(bpy.types.Operator):
         # If import active on mesh, then set armature modifier
         if import_type == "MESH":
             SetObjectArmature(
-                self.filepath[0][:-3],
+                os.path.splitext(files[-1].name)[0],
                 mesh_obj_name,
                 armature_obj
             )

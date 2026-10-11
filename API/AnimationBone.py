@@ -2,12 +2,12 @@ import ctypes
 
 import mathutils
 
-from API.AnimConverterFunc import _CreateScalarEntryC, _AddScalarSqToAnimBlockC, _CreateTranslationEntryC, \
+from .AnimConverterFunc import _CreateScalarEntryC, _AddScalarSqToAnimBlockC, _CreateTranslationEntryC, \
     _AddTranslationSqToAnimBlockC, _CreateRotationEntryC, _AddRotationSqToAnimBlockC, _GetTranslationSqSizeC, \
     _GetTranslationFromSqC, _GetVector3DX, _GetVector3DZ, _GetVector3DY, _GetValueFromTranslationEntryC, \
     _GetValueFromScalarEntryC, _GetValueFromRotationEntryC, _GetQuaternionX, _GetQuaternionY, _GetQuaternionW, \
     _GetQuaternionZ
-from API.AnimationUtils import BoneAxisCorrection, BoneAxisCorrectionInv
+from .AnimationUtils import BoneAxisCorrection, BoneAxisCorrectionInv
 
 class AnimationBoneScale:
     """

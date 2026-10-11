@@ -1,15 +1,15 @@
 import ctypes
 
-from API.AnimConverterFunc import (
+from .AnimConverterFunc import (
     _LoadSFBGSSkeletonRigFromFileC, _SaveAnimationToSFBGSFormatWithExistingRigDirectC,
     _CreateSkeletonRigC, _AddBoneToSkeletonRigC, _GetSkeletonBoneC,
     _SetBoneTypeC, _SetTwistBonePropertiesC, _SetMirrorIndexC, _SaveSkeletonRigToSFBGSFormatDirectC,
     _CreateStringContainerC, _GetStringFromContainerC, _SFBGSRigPackage_AddBoneNameToMapC,
     _SFBGSRigPackage_AddPackageToSkeletonRigC
 )
-from API.AnimationIOWrappers import SkelRig
-from API.Animation import AnimData
-from API.AnimationScene import AnimScene
+from .AnimationIOWrappers import SkelRig
+from .Animation import AnimData
+from .AnimationScene import AnimScene
 
 
 def LoadRigPtr(rig_path):

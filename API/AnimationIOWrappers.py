@@ -4,15 +4,15 @@ import bpy
 
 import mathutils
 
-from API.AnimConverterFunc import (
+from .AnimConverterFunc import (
     _GetSkeletonBoneParentIndexC, _GetSkeletonBoneC, _GetSkeletonBoneNameC, _GetQuaternionX, _GetQuaternionY,
     _GetQuaternionZ, _GetQuaternionW, _GetSkeletonBoneRotationC, _GetSkeletonBonePositionC, _GetVector3X, _GetVector3Y,
     _GetVector3Z, _GetSkeletonRigBoneCountC, _SFBGSRigPackage_GetPrecisionTypeC,
     _GetBoneTypeC, _GetMirrorIndexC, _GetTwistBoneDriverIndexC, _GetTwistBoneDriverWeightC,
     _SFBGSRigPackage_BoneIsMappedC, _SFBGSRigPackage_GetBoneKeyC
 )
-from API import AnimationUtils
-from API.AnimationBone import AnimBoneData
+from . import AnimationUtils
+from .AnimationBone import AnimBoneData
 
 flip_x = mathutils.Matrix.Scale(-1, 4, (0, 1, 0))
 sca = mathutils.Matrix.Scale(1.000, 4, [1.0, 1.0, 1.0])

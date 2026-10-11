@@ -3,7 +3,7 @@ import shutil
 
 import mathutils
 
-from API.AnimationUtils import BoneAxisCorrection_Alt, BoneAxisCorrectionInv, BoneAxisCorrection
+from .AnimationUtils import BoneAxisCorrection_Alt, BoneAxisCorrectionInv, BoneAxisCorrection
 
 def GetRigByName(name):
     path = os.path.join(GetRigFolder(), f"{name}.rig")

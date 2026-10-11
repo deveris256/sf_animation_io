@@ -1,14 +1,14 @@
 import ctypes
 
-from API import AnimConverter
-from API.AnimConverterFunc import _GetSkeletonRigBoneCountC, _CreateAnimationSceneC, _AddRigToAnimationSceneC, \
+from . import AnimConverter
+from .AnimConverterFunc import _GetSkeletonRigBoneCountC, _CreateAnimationSceneC, _AddRigToAnimationSceneC, \
     _CreateAnimationC, _CreateAnimBlockC, _ExecuteRDPReduction_ScalarC, _ExecuteRDPReduction_TranslationC, \
     _ExecuteRDPReduction_RotationC, _AddAnimBlockToAnimationC, _LoadAnimationSceneFromSFBGSFormatC, _list_to_wchar_arr, \
     _GetAnimationCountC, _GetAnimationSceneNameC, _GetAnimationC, _GetAnimationTitleC, _GetAnimationBlockCountC, \
     _GetAnimationBlockC, _GetAnimBlockBoneNameC, _GetScalarSqSizeC, _GetScalarFromSqC, _GetFrameFromScalarEntryC, \
     _GetTranslationSqSizeC, _GetTranslationFromSqC, _GetRotationSqSizeC, _GetFrameFromRotationEntryC, \
     _GetRotationFromSqC, _GetFrameFromTranslationEntryC
-from API.Animation import AnimData
+from .Animation import AnimData
 
 
 class AnimScene:
