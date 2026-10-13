@@ -32,7 +32,7 @@ class ExportCustomRig(bpy.types.Operator):
             self.filepath += ".rig"
 
         rig = bpy.context.view_layer.objects.active
-        if rig.type != "ARMATURE":
+        if rig is None or rig.type != "ARMATURE":
             self.report({'ERROR'}, f"Please select an armature")
             return {'CANCELLED'}
 
