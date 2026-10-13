@@ -1,7 +1,7 @@
 import bpy
 import os
 
-from AnimationIO.AnimatableRig import bl_import_rig_from_path
+from ..AnimationIO.AnimatableRig import bl_import_rig_from_path
 
 class ImportCustomRig(bpy.types.Operator):
     bl_idname = "import_scene.import_custom_starfield_rig"

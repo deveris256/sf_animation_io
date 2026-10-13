@@ -2,7 +2,7 @@ import ctypes
 from enum import Enum
 import mathutils
 
-from AnimationIO.AnimationIOFuncs import (
+from .AnimationIOFuncs import (
     _GetSkeletonBoneNameC, _GetSkeletonRigBoneCountC, _GetSkeletonBoneChildC,
     _GetSkeletonRigRootC, _LoadSFBGSSkeletonRigFromFileC, _GetAnimationBlockC, _GetScalarSqSizeC, _GetScalarFromSqC,
     _GetFrameFromScalarFrameC, _GetValueFromScalarFrameC, _GetTranslationSqSizeC, _GetTranslationFromSqC,
@@ -21,8 +21,8 @@ from AnimationIO.AnimationIOFuncs import (
     _AddTranslationSqToAnimBlockC, _AddAnimBlockToAnimationC, _SaveAnimationToSFBGSFormatWithExistingRigDirectC,
     _CreateRotationFrameC, _AddRotationSqToAnimBlockC, _CreateScalarFrameC, _AddScalarSqToAnimBlockC,
 )
-from AnimationIO.AnimatedBone import AnimatedBone
-from CommonUtilsAnimIO import ensure_object_mode, ensure_bl_mode_on_obj
+from .AnimatedBone import AnimatedBone
+from ..CommonUtilsAnimIO import ensure_object_mode, ensure_bl_mode_on_obj
 
 
 class RigPrecision:
