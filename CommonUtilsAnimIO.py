@@ -35,15 +35,16 @@ class SomethingHappenedException(Exception):
 
 def worked(func, args):
     try:
-        func(*args)
+        func(**args)
     except Exception as e:
         return f"Error:\n {traceback.format_exc()}\n Actually:\n {str(e)}"
     return None
 
 def spawn_error(self, error):
-    error = f"Look, an error! Report to devs. Here's the error message:\n{error}"
+    error = f"Look, an error!\n\nHere's the error message:\n{error}"
     print(error)
     self.report({'ERROR'}, error)
+    return {'CANCELLED'}
 
 def gen_description_box(text_list, layout, scale=0.3):
     for text in text_list:

@@ -106,7 +106,7 @@ class ImportCustomAnimation(bpy.types.Operator):
         box.prop(self, "set_frames_end")
         gen_description_box(self.strings["set_frames_end"], box)
 
-    def validate_execute(self, files):
+    def _validate(self, files):
         if self.selected_rig == "NONE":
             raise Exception(f"Please register before importing (F3 -> Register Starfield Rig)")
 
@@ -118,11 +118,8 @@ class ImportCustomAnimation(bpy.types.Operator):
                  if os.path.isfile(os.path.join(self.directory, f.name))
                  and f.name.lower().endswith(".af")]
 
-        did_not_work = worked(self.validate_execute, [files])
-
-        if did_not_work:
-            spawn_error(self, did_not_work)
-            return {'CANCELLED'}
+        e = worked(self._validate, {"files": files})
+        if e: return spawn_error(self, e)
 
         imp_mode = AnimationImportMode(self.imp_mode, self.selected_rig)
         max_frames = 0
@@ -175,8 +172,14 @@ class ImportCustomAnimation(bpy.types.Operator):
                     ref_obj.name = f"{filename}_refobj"
 
             anim_name = file.name.rpartition(".")[0]
-            print("bl_import_anim_from_path")
-            bl_import_anim_from_path(filepath, rig, rig_path, armature_obj)
+
+            e = worked(bl_import_anim_from_path, {
+                "anim_path": filepath,
+                "rig": rig,
+                "rig_path": rig_path,
+                "rig_bl_obj": armature_obj})
+
+            if e: return spawn_error(self, e)
 
             armature_obj.data.name = anim_name
             armature_obj.name = anim_name

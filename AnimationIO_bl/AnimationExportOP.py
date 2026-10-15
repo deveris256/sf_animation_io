@@ -4,7 +4,7 @@ import bpy
 import bpy_extras.io_utils
 
 from ..AnimationIO.AnimatableRig import bl_export_anim
-from ..CommonUtilsAnimIO import rig_list_enum_items, GetRigByName
+from ..CommonUtilsAnimIO import rig_list_enum_items, GetRigByName, worked, spawn_error
 
 
 class ExportCustomAnimation(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
@@ -24,23 +24,32 @@ class ExportCustomAnimation(bpy.types.Operator, bpy_extras.io_utils.ExportHelper
         box = layout.box()
         box.prop(self, "selected_rig")
 
-    def execute(self, context):
-        rig_file = GetRigByName(self.selected_rig)
+    def _validate(self):
         if self.selected_rig == "NONE":
             raise Exception("Please register rig (F3 -> Register Rig)")
 
+        active = bpy.context.view_layer.objects.active
+
+        if active is None or active.type != "ARMATURE":
+            raise Exception("Please ensure an armature is a current active object")
+
+    def execute(self, context):
+        e = worked(self._validate, {})
+
+        if e: return spawn_error(self, e)
+
+        rig_file = GetRigByName(self.selected_rig)
         rig_obj = bpy.context.view_layer.objects.active
 
-        if rig_obj is None:
-            self.report({'ERROR'}, "Please select an armature")
-            return {'CANCELLED'}
+        e = worked(bl_export_anim, {
+            "export_path": self.filepath,
+            "rig_obj": rig_obj,
+            "rig_path": rig_file})
 
-        if rig_obj.type != "ARMATURE":
-            raise Exception(f"Not an armature: {rig_obj.name}")
-
-        bl_export_anim(self.filepath, rig_obj, rig_file)
+        if e: return spawn_error(self, e)
 
         return {'FINISHED'}
+
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         self.filepath += "CustomAnimation.af"
