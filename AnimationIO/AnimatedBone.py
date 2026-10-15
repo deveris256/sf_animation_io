@@ -1,4 +1,4 @@
-from AnimationIO.AnimationIOFuncs import (
+from .AnimationIOFuncs import (
     _GetSkeletonBoneNameC, _GetGlobalSkeletonBonePositionC, _GetVector3XC, _GetVector3YC, _GetVector3ZC,
     _GetGlobalSkeletonBoneRotationC, _GetQuaternionXC, _GetQuaternionYC, _GetQuaternionZC, _GetQuaternionWC,
     _GetBoneTypeAsStringC, _GetTwistBoneDriverC, _GetTwistBoneDriverWeightC, _GetScalarSqSizeC, _GetScalarFromSqC,
@@ -9,7 +9,7 @@ from AnimationIO.AnimationIOFuncs import (
     _SetTwistBonePropertiesC, _SFBGSRigPackage_SetBoneLODValueC, _SetBoneTypeC, _SFBGSRigPackage_GetBoneKeyC,
     _SFBGSRigPackage_AddBoneNameToMapC,
 )
-from AnimationIO.BoneMatrix import BoneMatrix
+from .BoneMatrix import BoneMatrix
 from mathutils import Vector, Quaternion, Matrix
 
 def get_bone_type_int(s):

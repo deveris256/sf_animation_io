@@ -9,16 +9,9 @@ bl_info = {
     "category": "Import-Export",
 }
 
-import sys
-import os
+from . import CommonUtilsAnimIO #0
 
-dir = os.path.dirname(os.path.realpath(__file__))
-if dir not in sys.path:
-    sys.path.append(dir)
-
-import CommonUtilsAnimIO #0
-
-from AnimationIO_bl import (
+from .AnimationIO_bl import (
     RegisteredRigOP,
     RigProps,
     RigImportOP,
@@ -34,7 +27,7 @@ from AnimationIO_bl import (
 if CommonUtilsAnimIO.get_blender_version()[0] != 5:
     # Modules
     import imp
-    from AnimationIO import (
+    from .AnimationIO import (
         AnimationIOFuncs,  #0
         BoneMatrix, #0
         AnimatedBone, #1
