@@ -15,7 +15,7 @@ class RigToNodes(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         active_obj = bpy.context.view_layer.objects.active
-        if active_obj.type != "ARMATURE":
+        if active_obj is None or active_obj.type != "ARMATURE":
             return False
         return True
 

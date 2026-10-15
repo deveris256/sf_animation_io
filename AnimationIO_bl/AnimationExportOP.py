@@ -31,6 +31,10 @@ class ExportCustomAnimation(bpy.types.Operator, bpy_extras.io_utils.ExportHelper
 
         rig_obj = bpy.context.view_layer.objects.active
 
+        if rig_obj is None:
+            self.report({'ERROR'}, "Please select an armature")
+            return {'CANCELLED'}
+
         if rig_obj.type != "ARMATURE":
             raise Exception(f"Not an armature: {rig_obj.name}")
 
