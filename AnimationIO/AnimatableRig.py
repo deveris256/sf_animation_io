@@ -28,7 +28,7 @@ from ..CommonUtilsAnimIO import ensure_object_mode, ensure_bl_mode_on_obj
 class RigPrecision:
     rig_precision = {
         "DEFAULT": 0,
-        "FIRST PERSON": 1,
+        "FIRST_PERSON": 1,
         "SHIP": 2,
         "CUSTOM": 3
     }
@@ -105,7 +105,7 @@ class AnimatableRig:
     def rig_from_ptr(self, rig_ptr):
         """Secondary ctor"""
         print("Rig ptr", rig_ptr)
-        precision_str = _SFBGSRigPackage_GetPrecisionType(rig_ptr).decode('utf-8').upper()
+        precision_str = _SFBGSRigPackage_GetPrecisionType(rig_ptr).decode('utf-8').upper().replace(" ", "_")
         self.precision.precision_str = precision_str
 
         self.is_mannequin = _SFBGSRigPackage_IsMannequinC(rig_ptr)
