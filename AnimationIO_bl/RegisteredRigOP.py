@@ -1,12 +1,29 @@
 import bpy
 import os
 import shutil
-
+import textwrap
 from ..AnimationIO import AnimatableRig
 from ..CommonUtilsAnimIO import (
+    GetExistingRigs,
     GetRigFolder,
     prepare_file_name, gen_description_box, ensure_object_mode, ensure_bl_mode_on_obj)
 
+strings = {
+    "rig_name": \
+        "A name the Rig should be registered as - "
+        "for example, \"human_male\". "
+        "You will see the name in UI when importing animation. "
+        "If rig with the same name already exists, new rig will overwrite it. "
+        "Do not include file extension."
+}
+
+def gstr():
+    new_strings = {}
+    for name, info in strings.items():
+        info = info.strip().replace("\n", " ")
+        info = textwrap.wrap(info, width=35)
+        new_strings.update({name: info})
+    return new_strings
 
 def register_rig_file(rig_path, rig_name):
     source_path = rig_path
@@ -103,6 +120,16 @@ class RegisterCustomRig(bpy.types.Operator):
         register_rig_file(self.filepath, self.rig_name)
         self.report({'INFO'}, "Successfully registered rig")
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        self.filename = "skeleton.rig"
+        context.window_manager.fileselect_add(self)
+        self.strings = gstr()
+        self.existing_rigs = GetExistingRigs()
+        self.rig_amount = len(self.existing_rigs)
+        if len(self.existing_rigs) == 0:
+            self.existing_rigs.append("NO RIGS FOUND")
+        return {'RUNNING_MODAL'}
 
 _classes = [
 OpenRegisteredRigsFolder,
