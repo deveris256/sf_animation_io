@@ -195,11 +195,11 @@ class ImportCustomAnimation(bpy.types.Operator):
             ensure_object_mode()
 
             # If import active on mesh, then set armature modifier
-            if imp_mode.obj_name == "MESH":
+            if imp_mode.import_on == "MESH":
                 set_object_armature(
                     filename,
                     ref_obj.name,
-                    armature_obj.name
+                    armature_obj
                 )
 
         if self.set_frames_end:
