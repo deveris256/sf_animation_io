@@ -2,6 +2,7 @@ import bpy
 import os
 import shutil
 import textwrap
+import sys
 from ..AnimationIO import AnimatableRig
 from ..CommonUtilsAnimIO import (
     GetExistingRigs,
@@ -42,10 +43,17 @@ class OpenRegisteredRigsFolder(bpy.types.Operator):
     def execute(self, context):
         import os
         folder = GetRigFolder()
-        if os.path.isdir(folder):
-            os.startfile(folder)
-        else:
+        if not os.path.isdir(folder):
             raise Exception(f"Not a folder: {folder}")
+
+        if sys.platform == "win32":
+            os.startfile(folder)
+        elif sys.platform == "linux":
+            import subprocess
+            subprocess.Popen(["xdg-open", folder])
+        else:
+            raise Exception("ANIMATION IO: CANNOT DETERMINE PLATFORM")
+
         return {'FINISHED'}
 
 class RegisterCustomRig(bpy.types.Operator):
