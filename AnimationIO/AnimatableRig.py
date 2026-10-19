@@ -182,7 +182,12 @@ class AnimatableRig:
 
                 for pose_bone in non_twist_rig_bones:
                     bone = [b for b in self.bones if b.name == pose_bone.name][0]
-                    bone.from_anim_pose_bone(pose_bone, frame_id)
+                    bone.from_anim_pose_bone(
+                        rig_obj.pose.bones[pose_bone.name],
+                        frame_id,
+                        pose_bone_parent=
+                            rig_obj.pose.bones[pose_bone.parent.name] if pose_bone.parent is not None else None,
+                    )
 
         ensure_object_mode()
 
