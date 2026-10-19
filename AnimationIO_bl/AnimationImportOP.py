@@ -205,6 +205,8 @@ class ImportCustomAnimation(bpy.types.Operator):
         if self.set_frames_end:
             bpy.context.scene.frame_end = max_frames
 
+        bpy.context.view_layer.update()
+
         return {'FINISHED'}
     def invoke(self, context, event):
         self.strings = gstr(strings)
