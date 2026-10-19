@@ -9,7 +9,7 @@ from ..CommonUtilsAnimIO import rig_list_existing_bone_order_json_enum_items, ge
 
 class ExportCustomRig(bpy.types.Operator):
     bl_idname = "export_scene.export_custom_starfield_rig"
-    bl_label = "Starfield Rig (.rig)"
+    bl_label = "Export Starfield Rig (.rig)"
 
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -66,6 +66,12 @@ def menu_func_rig_export(self, context):
         text="Starfield Rig (.rig)",
     )
 
+def menu_func_rig_export_alt(self, context):
+    self.layout.operator(
+        ExportCustomRig.bl_idname,
+        text="Export Starfield Rig (.rig)",
+    )
+
 _classes = [
 ExportCustomRig,
 ]
@@ -74,10 +80,12 @@ def register():
     for c in _classes:
         bpy.utils.register_class(c)
 
-    bpy.types.VIEW3D_MT_view.append(menu_func_rig_export)
+    bpy.types.VIEW3D_MT_view.append(menu_func_rig_export_alt)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_rig_export)
 
 def unregister():
     for c in _classes:
         bpy.utils.unregister_class(c)
 
-    bpy.types.VIEW3D_MT_view.remove(menu_func_rig_export)
+    bpy.types.VIEW3D_MT_view.remove(menu_func_rig_export_alt)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_rig_export)

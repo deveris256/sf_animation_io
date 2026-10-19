@@ -9,7 +9,7 @@ from ..CommonUtilsAnimIO import rig_list_enum_items, GetRigByName, worked, spawn
 
 class ExportCustomAnimation(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     bl_idname = "export_scene.custom_af"
-    bl_label = "Export Custom Animation"
+    bl_label = "Export Starfield Animation (.af)"
 
     bl_options = {'UNDO'}
 
@@ -55,10 +55,16 @@ class ExportCustomAnimation(bpy.types.Operator, bpy_extras.io_utils.ExportHelper
         self.filepath += "CustomAnimation.af"
         return {'RUNNING_MODAL'}
 
-def menu_func_anim_import(self, context):
+def menu_func_anim_export(self, context):
     self.layout.operator(
         ExportCustomAnimation.bl_idname,
         text="Starfield Animation (.af)",
+    )
+
+def menu_func_anim_export_alt(self, context):
+    self.layout.operator(
+        ExportCustomAnimation.bl_idname,
+        text="Export Starfield Animation (.af)",
     )
 
 _classes_ = [
@@ -68,9 +74,11 @@ _classes_ = [
 def register():
     for c in _classes_: bpy.utils.register_class(c)
 
-    bpy.types.VIEW3D_MT_view.append(menu_func_anim_import)
+    bpy.types.VIEW3D_MT_view.append(menu_func_anim_export_alt)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_anim_export)
 
 def unregister():
     for c in _classes_: bpy.utils.unregister_class(c)
 
-    bpy.types.VIEW3D_MT_view.remove(menu_func_anim_import)
+    bpy.types.VIEW3D_MT_view.remove(menu_func_anim_export_alt)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_anim_export)

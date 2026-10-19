@@ -5,7 +5,7 @@ from ..AnimationIO.AnimatableRig import bl_import_rig_from_path
 
 class ImportCustomRig(bpy.types.Operator):
     bl_idname = "import_scene.import_custom_starfield_rig"
-    bl_label = "Starfield Rig (.rig)"
+    bl_label = "Import Starfield Rig (.rig)"
 
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -33,6 +33,12 @@ def menu_func_rig_import(self, context):
         text="Starfield Rig (.rig)",
     )
 
+def menu_func_rig_import_alt(self, context):
+    self.layout.operator(
+        ImportCustomRig.bl_idname,
+        text="Import Starfield Rig (.rig)",
+    )
+
 _classes = [
 ImportCustomRig,
 ]
@@ -41,10 +47,12 @@ def register():
     for c in _classes:
         bpy.utils.register_class(c)
 
-    bpy.types.VIEW3D_MT_view.append(menu_func_rig_import)
+    bpy.types.VIEW3D_MT_view.append(menu_func_rig_import_alt)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_rig_import)
 
 def unregister():
     for c in _classes:
         bpy.utils.unregister_class(c)
 
-    bpy.types.VIEW3D_MT_view.remove(menu_func_rig_import)
+    bpy.types.VIEW3D_MT_view.remove(menu_func_rig_import_alt)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_rig_import)

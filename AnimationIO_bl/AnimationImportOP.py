@@ -61,7 +61,7 @@ class AnimationImportMode:
 
 class ImportCustomAnimation(bpy.types.Operator):
     bl_idname = "import_scene.custom_af"
-    bl_label = "Import Custom Animation"
+    bl_label = "Import Starfield Animation (.af)"
 
     bl_options = {'UNDO'}
 
@@ -217,6 +217,12 @@ def menu_func_anim_import(self, context):
         text="Starfield Animation (.af)",
     )
 
+def menu_func_anim_import_alt(self, context):
+    self.layout.operator(
+        ImportCustomAnimation.bl_idname,
+        text="Import Starfield Animation (.af)",
+    )
+
 _classes_ = [
     ImportCustomAnimation,
 ]
@@ -224,9 +230,11 @@ _classes_ = [
 def register():
     for c in _classes_: bpy.utils.register_class(c)
 
-    bpy.types.VIEW3D_MT_view.append(menu_func_anim_import)
+    bpy.types.VIEW3D_MT_view.append(menu_func_anim_import_alt)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_anim_import)
 
 def unregister():
     for c in _classes_: bpy.utils.unregister_class(c)
 
-    bpy.types.VIEW3D_MT_view.remove(menu_func_anim_import)
+    bpy.types.VIEW3D_MT_view.remove(menu_func_anim_import_alt)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_anim_import)
