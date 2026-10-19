@@ -1,4 +1,4 @@
-from mathutils import Matrix
+from mathutils import Matrix, Quaternion
 import math
 from math import radians
 from bpy_extras.io_utils import axis_conversion
@@ -36,6 +36,7 @@ class BoneMatrix:
     """
     def __init__(self):
         self._world_bone_matrix = Matrix.Identity(4)
+        self._parent_local_rotation = Quaternion()
         self._overlay_matrices = {}
         self._overlay_matrices_mask = {} # tra, rot, sca
 
@@ -54,8 +55,18 @@ class BoneMatrix:
 
     def set_overlay_matrix_from_blender(self, frame_id, overlay_matrix, mask):
         frame_id = int(frame_id)
+
         overlay_mat = matrix_construct_helper(overlay_matrix)
-        self._overlay_matrices[frame_id] = bone_axis_correction_m90.to_4x4() @ overlay_mat @ bone_axis_correction_90.to_4x4()
+        overlay_mat = bone_axis_correction_m90.to_4x4() @ overlay_mat @ bone_axis_correction_90.to_4x4()
+
+        tra, rot, sca = overlay_mat.decompose()
+
+        overlay_mat = matrix_construct_helper(
+            (self._parent_local_rotation @ tra,
+             rot,
+             Matrix.Diagonal(sca).to_4x4()))
+
+        self._overlay_matrices[frame_id] = overlay_mat
         self._overlay_matrices_mask[frame_id] = mask
 
     def get_overlay_matrix_or_identity(self, frame_id):
@@ -67,8 +78,16 @@ class BoneMatrix:
     def get_blender_compatible_overlay_matrix(self, frame_id):
         frame_id = int(frame_id)
         if frame_id in self._overlay_matrices.keys():
-            base_overlay_mat = self._overlay_matrices[frame_id]
+
+            tra, rot, sca = self._overlay_matrices[frame_id].decompose()
+
+            base_overlay_mat = matrix_construct_helper(
+                (self._parent_local_rotation.inverted() @ tra,
+                 rot,
+                 Matrix.Diagonal(sca).to_4x4()))
+
             out_mat = bone_axis_correction_90.to_4x4() @ base_overlay_mat @ bone_axis_correction_m90.to_4x4()
+
             return True, out_mat
         return False, Matrix.Identity(4)
 

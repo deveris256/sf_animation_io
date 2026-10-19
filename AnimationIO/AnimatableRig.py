@@ -115,6 +115,7 @@ class AnimatableRig:
         root_bone = _GetSkeletonRigRootC(rig_ptr)
         root_bone_name = self._load_single_bone(rig_ptr, None, root_bone)
         self._load_ptr_bones_recursive(rig_ptr, root_bone, root_bone_name, bone_count)
+        self.update_parent_local_mat()
 
     def _load_single_bone(self, rig_ptr, root_bone_name, bone_ptr):
         """Loads single rig bone"""
@@ -136,16 +137,32 @@ class AnimatableRig:
 
             self._load_ptr_bones_recursive(rig_ptr, bone_ptr, bone_name, bone_count)
 
+    def update_parent_local_mat(self):
+        for bone in self.bones:
+            world_mat = bone.matrix.world_bone_matrix
+            if bone.parent_name is None:
+                local_mat = world_mat
+            else:
+                parent_mat = [b for b in self.bones if b.name == bone.parent_name][0].matrix
+                local_mat = parent_mat.world_bone_matrix.inverted() @ world_mat
+
+            bone.matrix._parent_local_rotation = local_mat.to_quaternion()
+
     def from_blender(self, rig_obj):
         ensure_bl_mode_on_obj('EDIT', rig_obj)
 
         self.precision.set_precision(rig_obj.sf_rig_props.rig_precision)
         self.is_mannequin = rig_obj.sf_rig_props.is_mannequin
 
+        regular_bone_names = []
         for edit_bone in rig_obj.data.edit_bones:
             bone = AnimatedBone(edit_bone.name)
             bone.from_blender(edit_bone)
             self.bones.append(bone)
+            if bone.bone_type != "Twist":
+                regular_bone_names.append(edit_bone.name)
+
+        self.update_parent_local_mat()
 
         if self.has_animation:
             import bpy
@@ -154,6 +171,8 @@ class AnimatableRig:
             action = bpy.context.object.animation_data.action
             max_keyframe_idx = int(action.frame_range[1])
 
+            non_twist_rig_bones = [b for b in rig_obj.pose.bones if b.name in regular_bone_names]
+
             for frame_id in range(max_keyframe_idx):
                 bpy.context.scene.frame_set(frame_id)
 
@@ -161,9 +180,10 @@ class AnimatableRig:
                 depsgraph.update()
                 rig_obj = rig_obj.evaluated_get(depsgraph)
 
-                for pose_bone in rig_obj.pose.bones:
+                for pose_bone in non_twist_rig_bones:
                     bone = [b for b in self.bones if b.name == pose_bone.name][0]
                     bone.from_anim_pose_bone(pose_bone, frame_id)
+
         ensure_object_mode()
 
     def rig_to_blender(self, armature_obj):
