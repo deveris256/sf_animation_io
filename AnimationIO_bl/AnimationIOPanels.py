@@ -20,6 +20,7 @@ class OBJECT_PT_SF_AnimationManagementPanel(bpy.types.Panel):
         box.label(text="Rig utils")
         row = box.row()
         row.operator("scene.register_custom_rig", text="Reg. Rig from file")
+        row.operator("scene.sf_open_registered_rigs_folder", text="Open Rigs Folder")
         #TODO: row.operator("scene.register_custom_reference_object", text="Reg. reference")
 
         if not obj or obj.type != "ARMATURE":
